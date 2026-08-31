@@ -7,8 +7,8 @@ Manuscriptum Illuminatum combines a classic WordPress theme with a companion plu
 
 ## Download
 
-- **[Download Paginae Manuscripti Illuminati](packages/paginae-manuscripti-illuminati.zip?raw=1)** — the theme
-- **[Download Ligatura Manuscripti Illuminati](packages/ligatura-manuscripti-illuminati.zip?raw=1)** — the companion plugin
+- **[Download Paginae Manuscripti Illuminati](https://raw.githubusercontent.com/benjaminisawolfe/manuscriptum-illuminatum/main/packages/paginae-manuscripti-illuminati.zip)** — the theme
+- **[Download Ligatura Manuscripti Illuminati](https://raw.githubusercontent.com/benjaminisawolfe/manuscriptum-illuminatum/main/packages/ligatura-manuscripti-illuminati.zip)** — the companion plugin
 
 The current theme version is **1.0**. The current plugin version is **1.0**.
 
