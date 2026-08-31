@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420" role="img" aria-label="Default chronicle illustration">
+  <rect width="640" height="420" fill="#f7efd9"/>
+  <rect x="44" y="44" width="552" height="332" rx="4" fill="#ead7aa" stroke="#b69454" stroke-width="6"/>
+  <path d="M140 122h360M140 174h360M140 226h300M140 278h236" stroke="#20170f" stroke-width="16" stroke-linecap="round"/>
+  <path d="M92 82h72v72H92z" fill="#8f211b"/>
+  <path d="M108 98h40v40h-40z" fill="#b8851d"/>
+  <text x="320" y="356" text-anchor="middle" font-family="serif" font-size="30" fill="#20170f">Chronicle</text>
+</svg>

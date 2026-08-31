@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420" role="img" aria-label="Default character illustration">
+  <rect width="640" height="420" fill="#ead7aa"/>
+  <rect x="28" y="28" width="584" height="364" fill="none" stroke="#8f211b" stroke-width="8"/>
+  <circle cx="320" cy="156" r="64" fill="#24446b"/>
+  <path d="M178 344c26-82 78-124 142-124s116 42 142 124" fill="#445c3a"/>
+  <path d="M230 88h180l-18 32H248z" fill="#b8851d"/>
+  <text x="320" y="378" text-anchor="middle" font-family="serif" font-size="32" fill="#20170f">Persona</text>
+</svg>

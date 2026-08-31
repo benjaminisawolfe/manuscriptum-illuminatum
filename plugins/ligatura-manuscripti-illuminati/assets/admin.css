@@ -1,0 +1,55 @@
+.manuscriptum-illuminatum-admin-fields {
+	display: grid;
+	gap: 14px;
+	grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.manuscriptum-illuminatum-admin-field {
+	margin: 0;
+}
+
+.manuscriptum-illuminatum-admin-field label {
+	display: block;
+	font-weight: 600;
+	margin-bottom: 6px;
+}
+
+.manuscriptum-illuminatum-admin-field input,
+.manuscriptum-illuminatum-admin-field select,
+.manuscriptum-illuminatum-admin-field textarea {
+	box-sizing: border-box;
+	width: 100%;
+}
+
+.manuscriptum-illuminatum-admin-field--rich_text,
+.manuscriptum-illuminatum-admin-field--character_multiselect,
+.manuscriptum-illuminatum-admin-field--place_multiselect,
+.manuscriptum-illuminatum-admin-field--entry_multiselect {
+	grid-column: 1 / -1;
+}
+
+.manuscriptum-illuminatum-admin-field select[multiple] {
+	min-height: 12rem;
+}
+
+.manuscriptum-illuminatum-admin-field .description {
+	display: block;
+	margin-top: 6px;
+}
+
+.manuscriptum-illuminatum-admin-help {
+	color: #646970;
+	margin-top: 0;
+}
+
+.manuscriptum-illuminatum-admin-private-warning {
+	background: #fff8e5;
+	border-left: 4px solid #b26200;
+	margin-top: 0;
+	padding: 10px 12px;
+}
+
+.manuscriptum-illuminatum-character-author-warning {
+	color: #b32d2e;
+	font-weight: 600;
+}

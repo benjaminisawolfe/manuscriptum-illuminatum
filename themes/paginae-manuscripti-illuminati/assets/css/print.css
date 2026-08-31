@@ -1,0 +1,37 @@
+@page {
+	margin: 0.65in;
+}
+
+body {
+	background: #fff;
+	color: #000;
+	font-size: 12pt;
+}
+
+.site-header,
+.site-footer,
+.manuscriptum-illuminatum-breadcrumb,
+.manuscriptum-illuminatum-card__image,
+.manuscriptum-illuminatum-featured-image,
+.search-form,
+.navigation,
+.comment-respond {
+	display: none;
+}
+
+.manuscriptum-illuminatum-page,
+.manuscriptum-illuminatum-band__inner {
+	max-width: none;
+	padding: 0;
+}
+
+a {
+	color: #000;
+	text-decoration: none;
+}
+
+.manuscriptum-illuminatum-card,
+.manuscriptum-illuminatum-storyguide-notes {
+	box-shadow: none;
+	break-inside: avoid;
+}

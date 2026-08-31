@@ -1,0 +1,27 @@
+/*
+Theme Name: Paginae Manuscripti Illuminati
+Author: Manuscriptum Illuminatum
+Description: The illuminated-manuscript presentation layer for Manuscriptum Illuminatum Ars Magica campaign sites.
+Version: 1.0
+Requires at least: 6.5
+Requires PHP: 8.0
+License: GPL-3.0-only
+License URI: https://www.gnu.org/licenses/gpl-3.0.html
+Text Domain: paginae-manuscripti-illuminati
+*/
+
+:root {
+	--manuscriptum-illuminatum-ink: #20170f;
+	--manuscriptum-illuminatum-muted: #6f6252;
+	--manuscriptum-illuminatum-parchment: #f7efd9;
+	--manuscriptum-illuminatum-parchment-deep: #ead7aa;
+	--manuscriptum-illuminatum-rule: #b69454;
+	--manuscriptum-illuminatum-red: #8f211b;
+	--manuscriptum-illuminatum-gold: #b8851d;
+	--manuscriptum-illuminatum-blue: #24446b;
+	--manuscriptum-illuminatum-green: #445c3a;
+	--manuscriptum-illuminatum-panel: rgba(255, 252, 241, 0.88);
+	--manuscriptum-illuminatum-shadow: 0 16px 42px rgba(47, 31, 13, 0.14);
+	--manuscriptum-illuminatum-radius: 6px;
+	--manuscriptum-illuminatum-content: 1120px;
+}

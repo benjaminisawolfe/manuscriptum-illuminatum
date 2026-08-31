@@ -1,0 +1,39 @@
+# OS/editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# Environment/secrets
+.env
+.env.*
+*.key
+*.pem
+*.crt
+
+# WordPress local config
+wp-config.php
+
+# Dependency folders if added later
+node_modules/
+vendor/
+
+# Build/cache folders
+dist/
+build/
+.cache/
+coverage/
+
+# Node testing tools
+node_modules/
+playwright/.auth/
+test-results/
+playwright-report/
+blob-report/

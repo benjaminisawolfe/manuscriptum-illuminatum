@@ -1,0 +1,18 @@
+{
+    "name": "manuscriptum-illuminatum",
+    "private": true,
+    "scripts": {
+        "build:packages": "node scripts/build-packages.mjs",
+        "validate:packages": "node scripts/build-packages.mjs --validate-only --require-tracked",
+        "test:e2e": "playwright test",
+        "test:smoke": "playwright test tests/smoke.spec.js",
+        "test:visual": "playwright test tests/visual",
+        "test:a11y": "playwright test tests/a11y",
+        "test:typography": "playwright test tests/typography.spec.js",
+        "test:ui": "playwright test --ui"
+    },
+    "devDependencies": {
+        "@axe-core/playwright": "^4.13.0",
+        "@playwright/test": "^1.62.1"
+    }
+}

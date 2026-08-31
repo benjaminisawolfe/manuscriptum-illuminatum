@@ -1,0 +1,5 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Private development guidance is not part of release archives or clean exports.
+AGENTS.md export-ignore
