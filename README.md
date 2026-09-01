@@ -6,17 +6,29 @@ Turn WordPress into an illuminated home for your Ars Magica Saga: a place where 
 Manuscriptum Illuminatum combines a classic WordPress theme with a companion plugin. **Paginae Manuscripti Illuminati** provides the manuscript-inspired presentation, while **Ligatura Manuscripti Illuminati** supplies the campaign content, relationships, roles, and privacy rules that bind the site together.
 
 ## Screenshots
+
+### Home Page
 ![Home Page](docs/screenshots/home.png)
+
+### News Page
 ![News Page](docs/screenshots/annales.png)
+
+### Characters Page
 ![Characters Page](docs/screenshots/personae.png)
+
+### In-Game Journals Page
 ![In-Game Journals Page](docs/screenshots/commentarii.png)
+
+### Wiki Page
 ![Wiki Page](docs/screenshots/speculum.png)
+
+### Mobile View
 ![MobileView](docs/screenshots/mobile-screenshot.png)
 
 ## Download
 
-- **[Download Paginae Manuscripti Illuminati](https://raw.githubusercontent.com/benjaminisawolfe/manuscriptum-illuminatum/main/packages/paginae-manuscripti-illuminati.zip)** — the theme
-- **[Download Ligatura Manuscripti Illuminati](https://raw.githubusercontent.com/benjaminisawolfe/manuscriptum-illuminatum/main/packages/ligatura-manuscripti-illuminati.zip)** — the companion plugin
+- **[Download Paginae Manuscripti Illuminati](https://github.com/benjaminisawolfe/manuscriptum-illuminatum/releases/download/v1.0/paginae-manuscripti-illuminati.zip)** — the theme
+- **[Download Ligatura Manuscripti Illuminati](https://github.com/benjaminisawolfe/manuscriptum-illuminatum/releases/download/v1.0/ligatura-manuscripti-illuminati.zip)** — the companion plugin
 
 The current theme version is **1.0**. The current plugin version is **1.0**.
 
