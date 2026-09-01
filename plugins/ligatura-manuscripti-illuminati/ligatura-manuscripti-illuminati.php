@@ -3,7 +3,7 @@
  * Plugin Name: Ligatura Manuscripti Illuminati
  * Description: Campaign data, roles, privacy, relationships, and application logic for Manuscriptum Illuminatum.
  * Version: 1.0
- * Author: Manuscriptum Illuminatum
+ * Author: Ben Wolfe (https://github.com/benjaminisawolfe)
  * Text Domain: ligatura-manuscripti-illuminati
  * Domain Path: /languages
  * Requires at least: 6.5

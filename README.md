@@ -5,6 +5,14 @@ Turn WordPress into an illuminated home for your Ars Magica Saga: a place where 
 
 Manuscriptum Illuminatum combines a classic WordPress theme with a companion plugin. **Paginae Manuscripti Illuminati** provides the manuscript-inspired presentation, while **Ligatura Manuscripti Illuminati** supplies the campaign content, relationships, roles, and privacy rules that bind the site together.
 
+## Screenshots
+![Home Page](docs/screenshots/home.png)
+![News Page](docs/screenshots/annales.png)
+![Characters Page](docs/screenshots/personae.png)
+![In-Game Journals Page](docs/screenshots/commentarii.png)
+![Wiki Page](docs/screenshots/speculum.png)
+![MobileView](docs/screenshots/mobile-screenshot.png)
+
 ## Download
 
 - **[Download Paginae Manuscripti Illuminati](https://raw.githubusercontent.com/benjaminisawolfe/manuscriptum-illuminatum/main/packages/paginae-manuscripti-illuminati.zip)** — the theme
