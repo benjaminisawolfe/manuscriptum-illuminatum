@@ -1055,6 +1055,16 @@ textarea:focus-visible {
 	margin-top: 0;
 }
 
+.manuscriptum-illuminatum-content a[href]:empty {
+	display: none;
+}
+
+.manuscriptum-illuminatum-content pre {
+	max-width: 100%;
+	overflow-wrap: anywhere;
+	white-space: pre-wrap;
+}
+
 .manuscriptum-illuminatum-content-index {
 	margin-top: clamp(1.5rem, 4vw, 2.75rem);
 }

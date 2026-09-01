@@ -46,6 +46,7 @@ test('front page presentation', async ({ page }) => {
 		await page.goto('/');
 		await expect(page.locator('.manuscriptum-illuminatum-front-wiki .manuscriptum-illuminatum-card--wiki-update')).toHaveCount(4);
 		await page.addStyleTag({ content: '.manuscriptum-illuminatum-front-wiki .manuscriptum-illuminatum-card__modified { display: none !important; }' });
+		await preserveUnrelatedNavigationBaseline(page);
 
 		await expect(page).toHaveScreenshot('front-page-speculum.png', {
 			fullPage: true,

@@ -88,7 +88,9 @@ test('Personae directory uses responsive two-column teasers with optional campai
         await expect(withImage.first()).toBeVisible();
         await expect(withoutImage.first()).toBeVisible();
 
-        const image = withImage.first().locator('.manuscriptum-illuminatum-persona-teaser__image');
+        const image = directory.locator(
+            '.manuscriptum-illuminatum-persona-teaser__image[alt="Gold key on a blue heraldic shield"]'
+        );
         await expect(image).toBeVisible();
         await expect(image).toHaveAttribute('alt', 'Gold key on a blue heraldic shield');
         await expect(image).toHaveAttribute('sizes', /112px/);
