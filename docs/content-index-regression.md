@@ -26,7 +26,7 @@ newer implementations. The reviewed source diff therefore applied cleanly.
 | Plugin Speculum, Personae, Journal and Covenant directory files | No equivalent fix; port readable-entry checks and the unclassified Speculum group. |
 | Plugin shortcodes.php | No equivalent fix; port visibility checks and the automatic-excerpt recursion guard. |
 | Theme functions.php and includes/breadcrumbs.php | No equivalent fix; port visibility delegation, related-entry handling and Annales pagination/rule refresh. |
-| tests/content-index-regression.spec.js | Absent; port fixture-based browser/query regression coverage. |
+| tests/content-index-regression.spec.js | Absent; port fixture-based browser/query regression coverage. Adapt fixture search tokens to avoid an ordinal also matching the shared timestamp. |
 | tests/public-listing-queries.spec.js and support/mi-listing-regression-probe/probe.php | Absent; port administrator-only request-scoped visibility simulation and cleanup. |
 | tests/privacy.spec.js | Matched old base; port four directory endpoint privacy assertions. |
 | tests/personae.spec.js | Already corrected in canonical main: its selector targets the fixture portrait by alt text. Preserve this equivalent fix; do not replace it with the old branch's link-scoped selector. |
@@ -69,6 +69,11 @@ private-site REST boundaries. The query probe temporarily installs through WordP
 requires an administrator and nonce, changes public/private guest mode only inside that
 authorized request, returns assertion results, and removes its own posts, terms and plugin.
 It does not change staging's login setting or expose a guest endpoint.
+
+The initial canonical run exposed a fixture ambiguity: searching for the first entry's
+bare ordinal `01` also matched every entry when `01` occurred in their shared timestamp.
+Four tests failed for that reason. Entry-specific search tokens now include letters
+around the ordinal, preserving the exact-one-result assertions without changing query behavior.
 
 ## Repository identity guard
 

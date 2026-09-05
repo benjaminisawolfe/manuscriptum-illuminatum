@@ -20,7 +20,8 @@ async function withFixtures(page, section, run) {
         });
         for (let index = 0; index < section.count + 2; index += 1) {
             const status = index < section.count ? 'publish' : index === section.count ? 'draft' : 'private';
-            const title = `${marker} ${String(index + 1).padStart(2, '0')} ${status}`;
+            // A bare ordinal can also occur in the shared timestamp and match every fixture.
+            const title = `${marker} Entry${String(index + 1).padStart(2, '0')}Token ${status}`;
             const post = await wpRequest(page, api, `wp/v2/${section.type}`, {
                 method: 'POST',
                 body: {
