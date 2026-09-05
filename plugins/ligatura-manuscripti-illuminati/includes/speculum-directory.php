@@ -200,7 +200,7 @@ function query_entries( array $filters ): array {
 		array_filter(
 			( new \WP_Query( $args ) )->posts,
 			static function ( $post ): bool {
-				return $post instanceof \WP_Post && current_user_can( 'read_post', $post->ID );
+				return $post instanceof \WP_Post && \LigaturaManuscriptiIlluminati\Privacy\can_read_post( $post->ID );
 			}
 		)
 	);
@@ -320,7 +320,7 @@ function entries_for_topic( string $slug ): array {
 				)
 			),
 			static function ( $post ): bool {
-				return $post instanceof \WP_Post && current_user_can( 'read_post', $post->ID );
+				return $post instanceof \WP_Post && \LigaturaManuscriptiIlluminati\Privacy\can_read_post( $post->ID );
 			}
 		)
 	);
@@ -390,6 +390,22 @@ function render_grouped_directory(): string {
 		$groups .= '</section>';
 	}
 
+	// Entry Type is optional. Grouping must not hide otherwise readable entries.
+	$unclassified = array_values(
+		array_filter(
+			query_entries( array( 'speculum_q' => '', 'speculum_entry_type' => '' ) ),
+			static fn( \WP_Post $post ): bool => false === get_the_terms( $post, 'ligatura_entry_type' )
+		)
+	);
+
+	if ( $unclassified ) {
+		$groups .= '<section class="manuscriptum-illuminatum-directory-group manuscriptum-illuminatum-wiki-group">';
+		$groups .= '<h2>' . esc_html__( 'Unclassified Speculum entries', 'ligatura-manuscripti-illuminati' ) . '</h2>';
+		// There is no type collection to link to, so keep every unclassified entry reachable.
+		$groups .= render_entry_teasers( $unclassified );
+		$groups .= '</section>';
+	}
+
 	return $groups;
 }
 
@@ -410,7 +426,7 @@ function render_entry_teasers( array $posts ): string {
 	$html = '<div class="manuscriptum-illuminatum-directory-teaser-grid manuscriptum-illuminatum-wiki-teaser-grid">';
 
 	foreach ( $posts as $post ) {
-		if ( ! $post instanceof \WP_Post || ! current_user_can( 'read_post', $post->ID ) ) {
+		if ( ! $post instanceof \WP_Post || ! \LigaturaManuscriptiIlluminati\Privacy\can_read_post( $post->ID ) ) {
 			continue;
 		}
 
@@ -439,7 +455,7 @@ function render_entry_list( array $posts ): string {
 	$html = '<ul class="manuscriptum-illuminatum-wiki-entry-list">';
 
 	foreach ( $posts as $post ) {
-		if ( ! $post instanceof \WP_Post || ! current_user_can( 'read_post', $post->ID ) ) {
+		if ( ! $post instanceof \WP_Post || ! \LigaturaManuscriptiIlluminati\Privacy\can_read_post( $post->ID ) ) {
 			continue;
 		}
 
@@ -463,7 +479,7 @@ function render_search_results( array $posts ): string {
 	$html .= '<h2 class="screen-reader-text">' . esc_html__( 'Search results', 'ligatura-manuscripti-illuminati' ) . '</h2>';
 
 	foreach ( $posts as $post ) {
-		if ( ! $post instanceof \WP_Post || ! current_user_can( 'read_post', $post->ID ) ) {
+		if ( ! $post instanceof \WP_Post || ! \LigaturaManuscriptiIlluminati\Privacy\can_read_post( $post->ID ) ) {
 			continue;
 		}
 

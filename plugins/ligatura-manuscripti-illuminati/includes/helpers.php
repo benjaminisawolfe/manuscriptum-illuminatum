@@ -9,6 +9,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+if ( ! function_exists( 'ligatura_can_read_post' ) ) {
+	/**
+	 * Apply campaign visibility rules to a front-end entry.
+	 */
+	function ligatura_can_read_post( int $post_id ): bool {
+		return \LigaturaManuscriptiIlluminati\Privacy\can_read_post( $post_id );
+	}
+}
+
 if ( ! function_exists( 'ligatura_can_view_storyguide_notes' ) ) {
 	/**
 	 * Determine whether a user can view Storyguide-only notes.
@@ -181,7 +190,7 @@ if ( ! function_exists( 'ligatura_render_character_card' ) ) {
 	 * @param int $post_id Character ID.
 	 */
 	function ligatura_render_character_card( int $post_id ): string {
-		if ( 'ligatura_character' !== get_post_type( $post_id ) || ! current_user_can( 'read_post', $post_id ) ) {
+		if ( 'ligatura_character' !== get_post_type( $post_id ) || ! \LigaturaManuscriptiIlluminati\Privacy\can_read_post( $post_id ) ) {
 			return '';
 		}
 
@@ -222,7 +231,7 @@ if ( ! function_exists( 'ligatura_render_wiki_card' ) ) {
 	 * @param int $post_id Wiki entry ID.
 	 */
 	function ligatura_render_wiki_card( int $post_id ): string {
-		if ( 'ligatura_wiki' !== get_post_type( $post_id ) || ! current_user_can( 'read_post', $post_id ) ) {
+		if ( 'ligatura_wiki' !== get_post_type( $post_id ) || ! \LigaturaManuscriptiIlluminati\Privacy\can_read_post( $post_id ) ) {
 			return '';
 		}
 
@@ -260,7 +269,7 @@ if ( ! function_exists( 'ligatura_render_diary_card' ) ) {
 	 * @param int $post_id Journal ID.
 	 */
 	function ligatura_render_diary_card( int $post_id ): string {
-		if ( 'ligatura_diary' !== get_post_type( $post_id ) || ! current_user_can( 'read_post', $post_id ) ) {
+		if ( 'ligatura_diary' !== get_post_type( $post_id ) || ! \LigaturaManuscriptiIlluminati\Privacy\can_read_post( $post_id ) ) {
 			return '';
 		}
 
@@ -297,7 +306,7 @@ if ( ! function_exists( 'ligatura_render_covenant_card' ) ) {
 	 * @param int $post_id Covenant record ID.
 	 */
 	function ligatura_render_covenant_card( int $post_id ): string {
-		if ( 'ligatura_covenant' !== get_post_type( $post_id ) || ! current_user_can( 'read_post', $post_id ) ) {
+		if ( 'ligatura_covenant' !== get_post_type( $post_id ) || ! \LigaturaManuscriptiIlluminati\Privacy\can_read_post( $post_id ) ) {
 			return '';
 		}
 

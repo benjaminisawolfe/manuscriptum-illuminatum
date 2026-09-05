@@ -352,7 +352,7 @@ function render_rows( array $posts ): string {
 	$rows = '';
 
 	foreach ( $posts as $post ) {
-		if ( ! $post instanceof \WP_Post || ! current_user_can( 'read_post', $post->ID ) ) {
+		if ( ! $post instanceof \WP_Post || ! \LigaturaManuscriptiIlluminati\Privacy\can_read_post( $post->ID ) ) {
 			continue;
 		}
 
@@ -444,7 +444,7 @@ function persona_from_slug( string $slug ): ?\WP_Post {
 	$slug    = sanitize_title( $slug );
 	$persona = $slug ? get_page_by_path( $slug, OBJECT, 'ligatura_character' ) : null;
 
-	if ( ! $persona instanceof \WP_Post || ! current_user_can( 'read_post', $persona->ID ) ) {
+	if ( ! $persona instanceof \WP_Post || ! \LigaturaManuscriptiIlluminati\Privacy\can_read_post( $persona->ID ) ) {
 		return null;
 	}
 
@@ -476,7 +476,7 @@ function personae_with_journals(): array {
 	foreach ( readable_post_ids( 'ligatura_diary' ) as $journal_id ) {
 		$persona_id = absint( get_post_meta( $journal_id, 'ligatura_diary_character', true ) );
 
-		if ( $persona_id < 1 || isset( $personae[ $persona_id ] ) || 'ligatura_character' !== get_post_type( $persona_id ) || ! current_user_can( 'read_post', $persona_id ) ) {
+		if ( $persona_id < 1 || isset( $personae[ $persona_id ] ) || 'ligatura_character' !== get_post_type( $persona_id ) || ! \LigaturaManuscriptiIlluminati\Privacy\can_read_post( $persona_id ) ) {
 			continue;
 		}
 

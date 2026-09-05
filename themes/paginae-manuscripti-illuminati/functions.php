@@ -9,10 +9,23 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/**
+ * Delegate campaign visibility to Ligatura, with native WordPress fallback.
+ */
+function paginae_manuscripti_illuminati_can_read_entry( int $post_id ): bool {
+	if ( function_exists( 'ligatura_can_read_post' ) ) {
+		return ligatura_can_read_post( $post_id );
+	}
+
+	return is_user_logged_in()
+		? current_user_can( 'read_post', $post_id )
+		: is_post_publicly_viewable( $post_id ) && ! post_password_required( $post_id );
+}
+
 require_once get_template_directory() . '/includes/customizer.php';
 require_once get_template_directory() . '/includes/breadcrumbs.php';
 
-const PAGINAE_MANUSCRIPTI_ILLUMINATI_SITE_STRUCTURE_VERSION  = '2026-08-30-installability-v1';
+const PAGINAE_MANUSCRIPTI_ILLUMINATI_SITE_STRUCTURE_VERSION  = '2026-09-05-annales-pagination-v2';
 const PAGINAE_MANUSCRIPTI_ILLUMINATI_SITE_STRUCTURE_OPTION   = 'paginae_manuscripti_illuminati_site_structure_version';
 const PAGINAE_MANUSCRIPTI_ILLUMINATI_ANNALES_MARKER_META     = '_paginae_manuscripti_illuminati_annales_root';
 const PAGINAE_MANUSCRIPTI_ILLUMINATI_ANNALES_ERROR_OPTION    = 'paginae_manuscripti_illuminati_annales_migration_error';
@@ -205,6 +218,13 @@ function paginae_manuscripti_illuminati_register_news_permastruct(): void {
 		return;
 	}
 
+	// Reserve Posts Page pagination before /news/{post-slug}/{content-page}/.
+	add_rewrite_rule(
+		'^news/' . preg_quote( $wp_rewrite->pagination_base, '/' ) . '/([0-9]+)/?$',
+		'index.php?pagename=news&paged=$matches[1]',
+		'top'
+	);
+
 	$original_root    = $wp_rewrite->root;
 	$wp_rewrite->root = '';
 
@@ -315,7 +335,7 @@ function paginae_manuscripti_illuminati_preserve_annales_endpoints(): void {
 
 	$post = get_page_by_path( sanitize_title( rawurldecode( $segments[1] ) ), OBJECT, 'post' );
 
-	if ( $post instanceof WP_Post && current_user_can( 'read_post', $post->ID ) ) {
+	if ( $post instanceof WP_Post && paginae_manuscripti_illuminati_can_read_entry( $post->ID ) ) {
 		remove_action( 'template_redirect', 'redirect_canonical' );
 	}
 }
@@ -874,7 +894,7 @@ function paginae_manuscripti_illuminati_latest_journal_posts( int $count ): arra
 function paginae_manuscripti_illuminati_render_journal_row( int $post_id ): string {
 	$journal = get_post( $post_id );
 
-	if ( ! $journal instanceof WP_Post || 'ligatura_diary' !== $journal->post_type || ! current_user_can( 'read_post', $post_id ) ) {
+	if ( ! $journal instanceof WP_Post || 'ligatura_diary' !== $journal->post_type || ! paginae_manuscripti_illuminati_can_read_entry( $post_id ) ) {
 		return '';
 	}
 
@@ -963,7 +983,7 @@ function paginae_manuscripti_illuminati_render_covenant_record_row( int $post_id
 function paginae_manuscripti_illuminati_render_chronicle_row( int $post_id, string $post_type, array $args ): string {
 	$entry = get_post( $post_id );
 
-	if ( ! $entry instanceof WP_Post || $post_type !== $entry->post_type || ! current_user_can( 'read_post', $post_id ) ) {
+	if ( ! $entry instanceof WP_Post || $post_type !== $entry->post_type || ! paginae_manuscripti_illuminati_can_read_entry( $post_id ) ) {
 		return '';
 	}
 
@@ -1112,7 +1132,7 @@ function paginae_manuscripti_illuminati_covenant_related_posts( int $post_id, st
 		$related_id = absint( $raw_id );
 		$entity     = $related_id ? get_post( $related_id ) : null;
 
-		if ( $entity instanceof WP_Post && $post_type === $entity->post_type && current_user_can( 'read_post', $entity->ID ) ) {
+		if ( $entity instanceof WP_Post && $post_type === $entity->post_type && paginae_manuscripti_illuminati_can_read_entry( $entity->ID ) ) {
 			$related[ $entity->ID ] = $entity;
 		}
 	}
@@ -1162,7 +1182,7 @@ function paginae_manuscripti_illuminati_covenant_related_group( int $post_id, st
  * @param array<string,mixed> $options Teaser display options.
  */
 function paginae_manuscripti_illuminati_render_speculum_teaser( int $post_id, array $options = array() ): string {
-	if ( 'ligatura_wiki' !== get_post_type( $post_id ) || ! current_user_can( 'read_post', $post_id ) ) {
+	if ( 'ligatura_wiki' !== get_post_type( $post_id ) || ! paginae_manuscripti_illuminati_can_read_entry( $post_id ) ) {
 		return '';
 	}
 
@@ -1192,7 +1212,7 @@ function paginae_manuscripti_illuminati_render_speculum_teaser( int $post_id, ar
  * Render a compact Persona teaser for the grouped Personae directory.
  */
 function paginae_manuscripti_illuminati_render_persona_teaser( int $post_id ): string {
-	if ( 'ligatura_character' !== get_post_type( $post_id ) || ! current_user_can( 'read_post', $post_id ) ) {
+	if ( 'ligatura_character' !== get_post_type( $post_id ) || ! paginae_manuscripti_illuminati_can_read_entry( $post_id ) ) {
 		return '';
 	}
 
@@ -1260,7 +1280,7 @@ function paginae_manuscripti_illuminati_related_entries( int $post_id ): void {
 	echo '<ul class="manuscriptum-illuminatum-related-list">';
 
 	foreach ( $entries as $entry_id ) {
-		if ( ! current_user_can( 'read_post', $entry_id ) ) {
+		if ( ! paginae_manuscripti_illuminati_can_read_entry( $entry_id ) ) {
 			continue;
 		}
 

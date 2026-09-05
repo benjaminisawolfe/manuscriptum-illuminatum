@@ -44,7 +44,7 @@ function character_shortcode( array $atts ): string {
 
 	$post_id = absint( $atts['id'] );
 
-	if ( ! $post_id || 'ligatura_character' !== get_post_type( $post_id ) || ! current_user_can( 'read_post', $post_id ) ) {
+	if ( ! $post_id || 'ligatura_character' !== get_post_type( $post_id ) || ! \LigaturaManuscriptiIlluminati\Privacy\can_read_post( $post_id ) ) {
 		return '';
 	}
 
@@ -176,7 +176,9 @@ function content_index_shortcode( array $atts ): string {
  * Append the matching content index to editable root Pages.
  */
 function append_directory_listing_to_root_page( string $content ): string {
-	if ( is_admin() || is_feed() || ! is_singular( 'page' ) || ! in_the_loop() || ! is_main_query() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
+	// wp_trim_excerpt() applies the_content while the root Page is still global.
+	// An entry without a manual excerpt must not recursively render its directory.
+	if ( doing_filter( 'get_the_excerpt' ) || is_admin() || is_feed() || ! is_singular( 'page' ) || ! in_the_loop() || ! is_main_query() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
 		return $content;
 	}
 
@@ -238,7 +240,7 @@ function related_entries_shortcode( array $atts ): string {
 	$output = '<ul class="manuscriptum-illuminatum-related-entries">';
 
 	foreach ( $entries as $entry_id ) {
-		if ( ! current_user_can( 'read_post', $entry_id ) ) {
+		if ( ! \LigaturaManuscriptiIlluminati\Privacy\can_read_post( $entry_id ) ) {
 			continue;
 		}
 

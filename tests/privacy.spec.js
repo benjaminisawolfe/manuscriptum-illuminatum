@@ -21,6 +21,10 @@ test('private-site gate protects front-end, feeds, and REST data from guests', a
             '/wp-json/wp/v2/ligatura_character?per_page=1',
             '/wp-json/wp/v2/ligatura_diary?per_page=1',
             '/wp-json/wp/v2/ligatura_covenant?per_page=1',
+            '/wp-json/ligatura-manuscripti-illuminati/v1/speculum',
+            '/wp-json/ligatura-manuscripti-illuminati/v1/personae',
+            '/wp-json/ligatura-manuscripti-illuminati/v1/journals',
+            '/wp-json/ligatura-manuscripti-illuminati/v1/covenant-records',
         ]) {
             const response = await context.request.get(route);
             expect(response.status(), `${route} must require authentication`).toBe(401);
