@@ -77,6 +77,7 @@ function png(...chunks) {
 test('scans PNG text metadata without treating compressed image pixels as text', () => {
     assert.equal(inspectableText(png(chunk('IDAT', Buffer.from('OpenAI C:/Users/not-metadata')))), '');
     for (const metadata of [
+        chunk('eXIf', Buffer.concat([Buffer.from([73, 73, 42, 0, 8, 0, 0, 0]), Buffer.from('OpenAI\0')])),
         chunk('tEXt', Buffer.from('Comment\0OpenAI')),
         chunk('zTXt', Buffer.concat([Buffer.from('Comment\0\0'), deflateSync(Buffer.from('OpenAI'))])),
         chunk('iTXt', Buffer.concat([Buffer.from('Comment\0\x01\0en\0Comment\0'), deflateSync(Buffer.from('OpenAI'))])),

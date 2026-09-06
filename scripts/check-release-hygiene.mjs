@@ -23,7 +23,7 @@ const rules = [
     ['authorization-token', /\bBearer\s+[a-z0-9._~-]{20,}|https?:\/\/[^/\s:@]+:[^/\s@]+@/gi],
     ['authentication-state', /["']cookies["']\s*:\s*\[|["']name["']\s*:\s*["']wordpress_(?:logged_in|sec)_/gi],
 ];
-const printableStrings = content => (content.toString('latin1').match(/[\x20-\x7e]{8,}/g) || []).join('\n');
+const printableStrings = content => (content.toString('latin1').match(/[\x20-\x7e]{3,}/g) || []).join('\n');
 
 // Compressed image pixels are not text. Inspect embedded PNG text/EXIF metadata
 // instead, including compressed and international text chunks.
