@@ -1,4 +1,4 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('./support/runtime-probes');
 const {
     createPersonaeImageFixture,
     createPersonaeWithoutImageFixture,
@@ -88,7 +88,7 @@ test('server requires a valid Character Type before publishing or scheduling a P
     }
 });
 
-test('persisted taxonomy recheck reverses a direct publication when tax_input is not saved', async ({ page }, testInfo) => {
+test('persisted taxonomy recheck reverses a direct publication when tax_input is not saved', async ({ page, regressionProbes }, testInfo) => {
     test.skip(testInfo.project.name !== 'desktop', 'The direct wp_insert_post persistence probe is verified once.');
 
     const api = await getApiSettings(page);

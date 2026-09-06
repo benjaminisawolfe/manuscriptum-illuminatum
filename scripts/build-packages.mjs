@@ -312,57 +312,65 @@ async function validateTrackedPackages() {
     process.stdout.write('\nGit tracking validation passed for both canonical package ZIPs.\n');
 }
 
-if (!validateOnly) {
-    await mkdir(packagesDirectory, { recursive: true });
+async function main() {
+    if (!validateOnly) {
+        await mkdir(packagesDirectory, { recursive: true });
 
-    for (const entry of await readdir(packagesDirectory, { withFileTypes: true })) {
-        if (entry.isFile() && entry.name.toLowerCase().endsWith('.zip')) {
-            await rm(path.join(packagesDirectory, entry.name));
-        }
-    }
-
-    for (const definition of packages) {
-        for (const required of definition.required) {
-            const sourceRelative = required.slice(definition.root.length + 1);
-            const sourceRequired = path.join(definition.source, sourceRelative.replaceAll('/', path.sep));
-            const requiredStats = await stat(sourceRequired).catch(() => null);
-            if (!requiredStats?.isFile()) {
-                throw new Error(`Required ${definition.label} file is missing: ${required}`);
+        for (const entry of await readdir(packagesDirectory, { withFileTypes: true })) {
+            if (entry.isFile() && entry.name.toLowerCase().endsWith('.zip')) {
+                await rm(path.join(packagesDirectory, entry.name));
             }
         }
 
-        const files = await collectFiles(definition.source);
-        const entries = [];
+        for (const definition of packages) {
+            for (const required of definition.required) {
+                const sourceRelative = required.slice(definition.root.length + 1);
+                const sourceRequired = path.join(definition.source, sourceRelative.replaceAll('/', path.sep));
+                const requiredStats = await stat(sourceRequired).catch(() => null);
+                if (!requiredStats?.isFile()) {
+                    throw new Error(`Required ${definition.label} file is missing: ${required}`);
+                }
+            }
 
-        for (const file of files) {
-            entries.push({
-                name: `${definition.root}/${file.archivePath}`,
-                content: await readFile(file.absolutePath),
-            });
+            const files = await collectFiles(definition.source);
+            const entries = [];
+
+            for (const file of files) {
+                entries.push({
+                    name: `${definition.root}/${file.archivePath}`,
+                    content: await readFile(file.absolutePath),
+                });
+            }
+
+            if (entries.length === 0) {
+                throw new Error(`No runtime files were found for the ${definition.label} package.`);
+            }
+
+            await writeFile(definition.archive, createZip(entries));
         }
+    }
 
-        if (entries.length === 0) {
-            throw new Error(`No runtime files were found for the ${definition.label} package.`);
-        }
+    const versions = new Set();
+    for (const definition of packages) {
+        versions.add(await validatePackage(definition));
+    }
 
-        await writeFile(definition.archive, createZip(entries));
+    if (versions.size !== 1) {
+        throw new Error(`Theme and plugin package versions must match; found ${[...versions].join(', ')}.`);
+    }
+
+    if (requireTracked) {
+        await validateTrackedPackages();
+    }
+
+    process.stdout.write('\nPackage validation passed.\n');
+    for (const definition of packages) {
+        process.stdout.write(`${path.resolve(definition.archive)}\n`);
     }
 }
 
-const versions = new Set();
-for (const definition of packages) {
-    versions.add(await validatePackage(definition));
-}
+export { packages, collectFiles, isExcluded, readZipEntries, createZip };
 
-if (versions.size !== 1) {
-    throw new Error(`Theme and plugin package versions must match; found ${[...versions].join(', ')}.`);
-}
-
-if (requireTracked) {
-    await validateTrackedPackages();
-}
-
-process.stdout.write('\nPackage validation passed.\n');
-for (const definition of packages) {
-    process.stdout.write(`${path.resolve(definition.archive)}\n`);
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+    await main();
 }
