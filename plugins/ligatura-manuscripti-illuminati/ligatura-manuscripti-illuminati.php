@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Ligatura Manuscripti Illuminati
  * Description: Campaign data, roles, privacy, relationships, and application logic for Manuscriptum Illuminatum.
- * Version: 1.0
+ * Version: 1.0.1
  * Author: Ben Wolfe (https://github.com/benjaminisawolfe)
  * Text Domain: ligatura-manuscripti-illuminati
  * Domain Path: /languages
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'LIGATURA_MANUSCRIPTI_ILLUMINATI_VERSION', '1.0' );
+define( 'LIGATURA_MANUSCRIPTI_ILLUMINATI_VERSION', '1.0.1' );
 define( 'LIGATURA_MANUSCRIPTI_ILLUMINATI_FILE', __FILE__ );
 define( 'LIGATURA_MANUSCRIPTI_ILLUMINATI_DIR', plugin_dir_path( __FILE__ ) );
 define( 'LIGATURA_MANUSCRIPTI_ILLUMINATI_URL', plugin_dir_url( __FILE__ ) );

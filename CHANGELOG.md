@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.1 — 2026-09-05
+
+Maintenance release.
+
+- Fixes published entries disappearing from front-end directories because of incorrect capability checks.
+- Includes Speculum entries without an Entry Type in the default directory.
+- Prevents automatic excerpts from recursively rendering directory content.
+- Fixes Annales pagination collisions with single-post routes.
+- Strengthens regression coverage and package validation.
+
 ## 1.0 — 2026-08-31
 
 Initial public release.
