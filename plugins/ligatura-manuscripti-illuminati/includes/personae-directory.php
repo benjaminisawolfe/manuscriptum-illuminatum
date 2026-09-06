@@ -74,7 +74,7 @@ function readable_characters(): array {
 				)
 			) )->posts,
 			static function ( $post ): bool {
-				return $post instanceof \WP_Post && current_user_can( 'read_post', $post->ID );
+				return $post instanceof \WP_Post && \LigaturaManuscriptiIlluminati\Privacy\can_read_post( $post->ID );
 			}
 		)
 	);
@@ -383,7 +383,7 @@ function query_characters( array $filters ): array {
 			( new \WP_Query( $args ) )->posts,
 			static function ( $post ) use ( $filters ): bool {
 				return $post instanceof \WP_Post
-					&& current_user_can( 'read_post', $post->ID )
+					&& \LigaturaManuscriptiIlluminati\Privacy\can_read_post( $post->ID )
 					&& personae_matches_search( $post, $filters['personae_q'] );
 			}
 		)
@@ -550,7 +550,7 @@ function render_persona_teasers( array $posts ): string {
 	$html = '<div class="manuscriptum-illuminatum-directory-teaser-grid manuscriptum-illuminatum-personae-teaser-grid">';
 
 	foreach ( $posts as $post ) {
-		if ( ! $post instanceof \WP_Post || ! current_user_can( 'read_post', $post->ID ) ) {
+		if ( ! $post instanceof \WP_Post || ! \LigaturaManuscriptiIlluminati\Privacy\can_read_post( $post->ID ) ) {
 			continue;
 		}
 
@@ -569,7 +569,7 @@ function render_persona_list( array $posts ): string {
 	$html = '<ul class="manuscriptum-illuminatum-personae-entry-list">';
 
 	foreach ( $posts as $post ) {
-		if ( ! $post instanceof \WP_Post || ! current_user_can( 'read_post', $post->ID ) ) {
+		if ( ! $post instanceof \WP_Post || ! \LigaturaManuscriptiIlluminati\Privacy\can_read_post( $post->ID ) ) {
 			continue;
 		}
 

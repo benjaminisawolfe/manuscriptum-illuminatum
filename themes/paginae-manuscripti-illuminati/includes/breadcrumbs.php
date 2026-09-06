@@ -85,7 +85,7 @@ function paginae_manuscripti_illuminati_breadcrumb_items(): array {
 		$persona = get_page_by_path( sanitize_title( $journal_persona_slug ), OBJECT, 'ligatura_character' );
 		paginae_manuscripti_illuminati_breadcrumb_add_campaign_root( $items, 'ligatura_diary' );
 
-		if ( $persona instanceof WP_Post && current_user_can( 'read_post', $persona->ID ) ) {
+		if ( $persona instanceof WP_Post && paginae_manuscripti_illuminati_can_read_entry( $persona->ID ) ) {
 			$items[] = paginae_manuscripti_illuminati_breadcrumb_item( get_the_title( $persona ) );
 		}
 

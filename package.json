@@ -9,7 +9,9 @@
         "test:visual": "playwright test tests/visual",
         "test:a11y": "playwright test tests/a11y",
         "test:typography": "playwright test tests/typography.spec.js",
-        "test:ui": "playwright test --ui"
+        "test:ui": "playwright test --ui",
+        "check:repository": "node scripts/check-repository.mjs",
+        "test:repository-guard": "node --test scripts/check-repository.test.mjs"
     },
     "devDependencies": {
         "@axe-core/playwright": "^4.13.0",

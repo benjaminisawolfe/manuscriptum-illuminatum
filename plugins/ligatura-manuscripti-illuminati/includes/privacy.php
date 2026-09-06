@@ -29,6 +29,26 @@ function login_required(): bool {
 }
 
 /**
+ * Determine whether the current visitor may see an entry in front-end listings.
+ *
+ * Anonymous visitors have no read capability, even for published posts. Honor
+ * the site's explicit public mode without granting access to private content.
+ */
+function can_read_post( int $post_id ): bool {
+	$post = get_post( $post_id );
+
+	if ( ! $post instanceof \WP_Post ) {
+		return false;
+	}
+
+	if ( is_user_logged_in() ) {
+		return current_user_can( 'read_post', $post_id );
+	}
+
+	return ! login_required() && is_post_publicly_viewable( $post ) && ! post_password_required( $post );
+}
+
+/**
  * Whether the current request targets a WordPress feed endpoint.
  *
  * The path fallback covers installations where custom root rewrites prevent

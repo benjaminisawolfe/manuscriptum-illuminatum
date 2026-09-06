@@ -403,7 +403,7 @@ function render_rows( array $posts ): string {
 	$rows = '';
 
 	foreach ( $posts as $post ) {
-		if ( $post instanceof \WP_Post && current_user_can( 'read_post', $post->ID ) ) {
+		if ( $post instanceof \WP_Post && \LigaturaManuscriptiIlluminati\Privacy\can_read_post( $post->ID ) ) {
 			$rows .= paginae_manuscripti_illuminati_render_covenant_record_row( $post->ID );
 		}
 	}
@@ -456,7 +456,7 @@ function relationship_choices( string $meta_key, string $post_type, bool $requir
 
 	foreach ( JournalDirectory\readable_post_ids( 'ligatura_covenant' ) as $record_id ) {
 		foreach ( MetaBoxes\parse_id_list( get_post_meta( $record_id, $meta_key, true ) ) as $entity_id ) {
-			if ( $post_type !== get_post_type( $entity_id ) || ! current_user_can( 'read_post', $entity_id ) ) {
+			if ( $post_type !== get_post_type( $entity_id ) || ! \LigaturaManuscriptiIlluminati\Privacy\can_read_post( $entity_id ) ) {
 				continue;
 			}
 
