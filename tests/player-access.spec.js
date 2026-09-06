@@ -1,4 +1,4 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('./support/runtime-probes');
 const { randomBytes } = require('node:crypto');
 const { getApiSettings, wpRawRequest, wpRequest } = require('./support/personae-fixture');
 
@@ -162,7 +162,7 @@ async function deleteFixture(page, api, path) {
     return { ok: response.ok(), status: response.status(), body };
 }
 
-test('Player assignment, least-privilege admin, media, Journal authorship, and reassignment are enforced', async ({ page, browser, baseURL }, testInfo) => {
+test('Player assignment, least-privilege admin, media, Journal authorship, and reassignment are enforced', async ({ page, regressionProbes, browser, baseURL }, testInfo) => {
     test.skip(testInfo.project.name !== 'desktop', 'Security mutations and separate Player sessions are exercised once.');
     test.setTimeout(360_000);
 

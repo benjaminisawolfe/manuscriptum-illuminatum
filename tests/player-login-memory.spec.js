@@ -1,4 +1,4 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('./support/runtime-probes');
 const { randomBytes } = require('node:crypto');
 const { getApiSettings, wpRawRequest, wpRequest } = require('./support/personae-fixture');
 
@@ -71,7 +71,7 @@ async function uploadPlayerOwnedFixture(page, api, playerId, suffix) {
     });
 }
 
-test('Player post-authentication bootstrap and repeated capability checks stay bounded', async ({ page }, testInfo) => {
+test('Player post-authentication bootstrap and repeated capability checks stay bounded', async ({ page, regressionProbes }, testInfo) => {
     test.skip(testInfo.project.name !== 'desktop', 'Security mutations are exercised once.');
     test.setTimeout(180_000);
 

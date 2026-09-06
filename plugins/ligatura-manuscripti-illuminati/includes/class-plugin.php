@@ -106,8 +106,6 @@ final class Plugin {
 		add_action( 'rest_api_init', __NAMESPACE__ . '\\SpeculumDirectory\\register_rest_route' );
 		add_action( 'rest_api_init', __NAMESPACE__ . '\\PersonaeDirectory\\register_rest_route' );
 		add_action( 'rest_api_init', __NAMESPACE__ . '\\DemoContent\\register_rest_routes' );
-		add_action( 'rest_api_init', __NAMESPACE__ . '\\CharacterPublication\\register_persistence_probe_route' );
-		add_action( 'rest_api_init', __NAMESPACE__ . '\\PlayerAccess\\register_rest_routes' );
 		add_action( 'init', __NAMESPACE__ . '\\Shortcodes\\register_shortcodes' );
 		add_action( 'created_ligatura_entry_type', __NAMESPACE__ . '\\PostTypes\\flush_term_dependent_rewrite_rules' );
 		add_action( 'edited_ligatura_entry_type', __NAMESPACE__ . '\\PostTypes\\flush_term_dependent_rewrite_rules' );

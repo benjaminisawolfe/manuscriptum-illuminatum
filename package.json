@@ -2,8 +2,8 @@
     "name": "manuscriptum-illuminatum",
     "private": true,
     "scripts": {
-        "build:packages": "node scripts/build-packages.mjs",
-        "validate:packages": "node scripts/build-packages.mjs --validate-only --require-tracked",
+        "build:packages": "node scripts/build-packages.mjs && npm run check:release-hygiene",
+        "validate:packages": "node scripts/build-packages.mjs --validate-only --require-tracked && npm run check:release-hygiene",
         "test:e2e": "playwright test",
         "test:smoke": "playwright test tests/smoke.spec.js",
         "test:visual": "playwright test tests/visual",
@@ -11,7 +11,9 @@
         "test:typography": "playwright test tests/typography.spec.js",
         "test:ui": "playwright test --ui",
         "check:repository": "node scripts/check-repository.mjs",
-        "test:repository-guard": "node --test scripts/check-repository.test.mjs"
+        "test:repository-guard": "node --test scripts/check-repository.test.mjs",
+        "check:release-hygiene": "node scripts/check-release-hygiene.mjs",
+        "test:release-hygiene": "node --test scripts/check-release-hygiene.test.mjs"
     },
     "devDependencies": {
         "@axe-core/playwright": "^4.13.0",

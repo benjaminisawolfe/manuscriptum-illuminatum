@@ -18,7 +18,7 @@ Stop immediately if the identity check fails. The canonical origin is
 The guard checks both fetch and push destinations in the active checkout.
 
 Fetch canonical origin, confirm a clean or understood working tree, and start a new
-`codex/` feature branch from current accepted canonical main unless the user explicitly
+scoped feature branch from current accepted canonical main unless the user explicitly
 asks to continue an existing branch. Preserve unrelated changes. Do not merge into main,
 force-push, rewrite history, or import another repository wholesale without explicit instructions.
 
@@ -43,3 +43,11 @@ Run targeted regressions and the applicable existing Playwright suites after dep
 Inspect visual mismatches; do not update baselines merely to make failures pass. Report
 implementation, deployment, automated results, visual/accessibility verification, and
 remaining limitations separately. Do not alter existing content as a regression workaround.
+
+## Release hygiene
+
+Before releasing, run `npm run test:release-hygiene` and `npm run check:release-hygiene`.
+The build and package-validation commands also enforce hygiene and source/ZIP identity.
+Keep test probes under excluded test support, never in distributable runtime code.
+Review suspicious matches in context and preserve licensing and factual attribution.
+See [Releasing](docs/RELEASING.md) for package inspection and publication checks.
