@@ -87,6 +87,7 @@ final class Plugin {
 		add_action( 'admin_menu', __NAMESPACE__ . '\\PlayerAccess\\allow_player_character_collection_menu_gate', 998 );
 		add_action( 'admin_menu', __NAMESPACE__ . '\\PlayerAccess\\restrict_player_admin_menu', 999 );
 		add_action( 'admin_init', __NAMESPACE__ . '\\PlayerAccess\\enforce_player_admin_screen_access', 1 );
+		add_action( 'admin_init', __NAMESPACE__ . '\\PlayerAccess\\prepare_player_character_form', 2 );
 		add_action( 'delete_user', __NAMESPACE__ . '\\PlayerAccess\\reassign_deleted_user_personae' );
 		add_filter( 'posts_clauses', __NAMESPACE__ . '\\JournalDates\\order_journal_query_clauses', 10, 2 );
 		add_filter( 'manage_ligatura_diary_posts_columns', __NAMESPACE__ . '\\JournalDates\\add_admin_saga_date_column' );

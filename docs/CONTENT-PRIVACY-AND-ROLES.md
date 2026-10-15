@@ -22,6 +22,13 @@
 
 Assign one or more Personae to each Player from the Persona editor before the Player creates Character-authored Commentarii. Players cannot grant themselves assignments, edit another user's Journal, publish new Personae, manage Pages/settings/plugins, or read Storyguide-only material.
 
+The canonical role slugs are `ligatura_player` and `ligatura_storyguide`. The
+versioned upgrade migrates the former project's `ars_player` and `ars_storyguide`
+memberships while retaining other roles and individual grants. It does not remove
+unrelated roles that happen to share those display names. See
+[Role migration and metadata saving](ROLE-AND-METADATA-SAVING.md) for the verified
+upgrade behavior, regression results and deployment/rollback checklist.
+
 ## Login-only mode
 
 Login is required by default for front-end pages, feeds, and WordPress REST content. To deliberately make published front-end content public, add this before the “stop editing” line in `wp-config.php`:
