@@ -120,6 +120,6 @@ test('Speculum TOC has six readable levels, wrapping and keyboard links without 
     expect(await page.evaluate(() => document.querySelector(':target')?.tagName)).toBe('H6');
     const results = await new AxeBuilder({ page }).include(tocSelector).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
     expect(results.violations).toEqual([]);
-    await toc.scrollIntoViewIfNeeded();
+    await toc.evaluate(element => element.scrollIntoView({ block: 'center' }));
     await toc.screenshot({ path: testInfo.outputPath('toc-six-levels.png') });
 });
