@@ -1201,12 +1201,33 @@ textarea:focus-visible {
 	margin-top: 0.25rem;
 }
 
+.manuscriptum-illuminatum-wiki-toc__item {
+	margin-inline-start: calc(var(--toc-level, 0) * clamp(0.6rem, 2vw, 1rem));
+	overflow-wrap: anywhere;
+}
+
+.manuscriptum-illuminatum-wiki-toc__item--level-1 {
+	--toc-level: 0;
+}
+
+.manuscriptum-illuminatum-wiki-toc__item--level-2 {
+	--toc-level: 1;
+}
+
 .manuscriptum-illuminatum-wiki-toc__item--level-3 {
-	margin-left: 1rem;
+	--toc-level: 2;
 }
 
 .manuscriptum-illuminatum-wiki-toc__item--level-4 {
-	margin-left: 2rem;
+	--toc-level: 3;
+}
+
+.manuscriptum-illuminatum-wiki-toc__item--level-5 {
+	--toc-level: 4;
+}
+
+.manuscriptum-illuminatum-wiki-toc__item--level-6 {
+	--toc-level: 5;
 }
 
 .manuscriptum-illuminatum-related-list,

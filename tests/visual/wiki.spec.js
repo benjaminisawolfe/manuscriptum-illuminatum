@@ -47,6 +47,12 @@ test('front page presentation', async ({ page }) => {
 		await expect(page.locator('.manuscriptum-illuminatum-front-wiki .manuscriptum-illuminatum-card--wiki-update')).toHaveCount(4);
 		await page.addStyleTag({ content: '.manuscriptum-illuminatum-front-wiki .manuscriptum-illuminatum-card__modified { display: none !important; }' });
 		await preserveUnrelatedNavigationBaseline(page);
+		// The Covenant Record regression restores this entry's content, but WordPress
+		// advances its modified date. Normalize only the screenshot DOM to its baseline.
+		await page.locator('.manuscriptum-illuminatum-covenant-news-row')
+			.filter({ has: page.locator('a[href$="/covenant-records/charter-chest-three-mismatched-keys/"]') })
+			.locator('.manuscriptum-illuminatum-card__meta')
+			.evaluate(element => { element.textContent = 'Last updated: September 1, 2026'; });
 
 		await expect(page).toHaveScreenshot('front-page-speculum.png', {
 			fullPage: true,
