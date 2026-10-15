@@ -21,32 +21,32 @@
 
 ## 1. Diagnose and fix editor lifecycle
 
-- [ ] Reproduce inert Visual editors with disposable Character/Wiki records; record actual iframe and initialization state.
-- [ ] Add `tests/meta-editors.spec.js` covering real typing/formatting, mode round trips, update/reload, isolation, Player saves and supported classic mode.
-- [ ] Implement lifecycle correction in `includes/meta-boxes.php` and `assets/admin.js`, sharing configuration with `media_buttons => false`.
-- [ ] Wire required editor script dependencies in `includes/class-plugin.php`; verify core media remains intact.
+- [x] Reproduce inert Visual editors with disposable Character/Wiki records; record actual iframe and initialization state.
+- [x] Add `tests/meta-editors.spec.js` covering real typing/formatting, mode round trips, update/reload, isolation, Player saves and supported classic mode.
+- [x] Implement lifecycle correction in `includes/meta-boxes.php` and `assets/admin.js`, sharing configuration with `media_buttons => false`.
+- [x] Wire required editor script dependencies in `includes/class-plugin.php`; verify core media remains intact.
 
 ## 2. Implement document validation and relationships
 
-- [ ] Verify missing-document-UI regression fails before implementation.
-- [ ] Create `includes/character-documents.php` with `register_meta()`, `register_rest_routes()`, `save_form()`, `render_control()` and `get_documents()`.
-- [ ] Store `_ligatura_character_documents` as an ordered unique integer array. Form field is JSON plus per-Character nonce; absence preserves, `[]` unlinks all.
-- [ ] REST `/characters/{id}/documents` reads/validates selections or saves `{ids:[]}`; `/documents/upload` accepts multipart `document` and creates a Media Library attachment without committing a relationship.
-- [ ] Require edit permission and explicit nonce on writes; upload also requires existing upload permission. Restricted Players may add only their own uploads or retain existing links.
-- [ ] Validate extension, core allowed MIME/type checks and actual Fileinfo MIME. Reject ambiguous formats with an understandable host-compatibility message rather than force allowing.
-- [ ] Add fixture-based API/form/ownership/file-format/size/omission/unlink tests in `tests/character-documents.spec.js`.
+- [x] Verify missing-document-UI regression fails before implementation.
+- [x] Create `includes/character-documents.php` with `register_meta()`, `register_rest_routes()`, `save_form()`, `render_control()` and `get_documents()`.
+- [x] Store `_ligatura_character_documents` as an ordered unique integer array. Form field is JSON plus per-Character nonce; absence preserves, `[]` unlinks all.
+- [x] REST `/characters/{id}/documents` reads/validates selections or saves `{ids:[]}`; `/documents/upload` accepts multipart `document` and creates a Media Library attachment without committing a relationship.
+- [x] Require edit permission and explicit nonce on writes; upload also requires existing upload permission. Restricted Players may add only their own uploads or retain existing links.
+- [x] Validate extension, core allowed MIME/type checks and actual Fileinfo MIME. Reject ambiguous formats with an understandable host-compatibility message rather than force allowing.
+- [x] Add fixture-based API/form/ownership/file-format/size/omission/unlink tests in `tests/character-documents.spec.js`.
 
 ## 3. Integrate admin and front end
 
-- [ ] Add `assets/character-documents.js` for separate multiple-file uploads, select-only media dialog, stable list, unlink and pending-save status. Preserve native error feedback and accessible labels.
-- [ ] Load module and hooks; render its control below Full Sheet. Keep generic main-editor and Campaign Image media controls.
-- [ ] Add conditional Full Sheet and Documents sections to `single-ligatura_character.php`, with minimal theme styling and escaping.
-- [ ] Verify actual saved metadata, authorized/anonymous views, direct file URL behavior and accessibility with generated documents only.
+- [x] Add `assets/character-documents.js` for separate multiple-file uploads, select-only media dialog, stable list, unlink and pending-save status. Preserve native error feedback and accessible labels.
+- [x] Load module and hooks; render its control below Full Sheet. Keep generic main-editor and Campaign Image media controls.
+- [x] Add conditional Full Sheet and Documents sections to `single-ligatura_character.php`, with minimal theme styling and escaping.
+- [x] Verify actual saved metadata, authorized/anonymous views, direct file URL behavior and accessibility with generated documents only.
 
 ## 4. Package, stage, review and hand off
 
-- [ ] Run repository guard, syntax/static inspection, release-hygiene tests and source/ZIP validation; inspect diff.
-- [ ] Commit/push branch and deploy both canonical ZIPs through the authorized staging replacement flow.
-- [ ] Run targeted Pass 2 and Pass 1 regressions, relevant existing desktop/mobile visual and accessibility suites. Inspect mismatches, never update baselines merely to pass.
-- [ ] Independently review authorization, upload validation and lifecycle changes; resolve material findings and rerun affected tests.
+- [x] Run repository guard, syntax/static inspection, release-hygiene tests and source/ZIP validation; inspect diff.
+- [x] Commit/push branch and deploy both canonical ZIPs through the authorized staging replacement flow.
+- [x] Run targeted Pass 2 and Pass 1 regressions, relevant existing desktop/mobile visual and accessibility suites. Inspect mismatches, never update baselines merely to pass.
+- [x] Independently review authorization, upload validation and lifecycle changes; resolve material findings and rerun affected tests.
 - [ ] Commit the report with root cause, format results, exact privacy limits, test matrix and rollback/acceptance instructions; push and open a review-ready PR without merging.
