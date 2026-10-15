@@ -35,11 +35,14 @@ async function withPlayer({ page, browser, baseURL }, run) {
             playerPage.waitForURL(/\/wp-admin\//, { waitUntil: 'domcontentloaded', timeout: 15_000 }),
             playerPage.locator('#wp-submit').click(),
         ]);
+        const trackPost = (type, id) => {
+            if (Number.isInteger(id) && id > 0 && !created.some(post => post.type === type && post.id === id)) created.push({ type, id });
+        };
         const create = async (type, values = {}) => {
             const post = await wpRequest(page, adminApi, `wp/v2/${type}`, { method: 'POST', body: {
                 title: `Fixture boundary ${suffix} ${created.length}`, status: 'draft', ...values,
             } });
-            created.push({ type, id: post.id });
+            trackPost(type, post.id);
             return post;
         };
         const bootstrap = await create('ligatura_character', { meta: { [assignmentKey]: user.id } });
@@ -50,7 +53,7 @@ async function withPlayer({ page, browser, baseURL }, run) {
         expect(Boolean(playerApi.root && playerApi.nonce), 'Assigned editor must expose authenticated REST settings').toBe(true);
         const read = (type, id) => wpRequest(page, adminApi, `wp/v2/${type}/${id}?context=edit`);
         const stored = id => wpRequest(page, adminApi, `ligatura-manuscripti-illuminati/v1/meta-saving/stored?post_id=${id}`);
-        await run({ user, admin, suffix, playerPage, playerApi, create, read, stored });
+        await run({ user, admin, suffix, bootstrap, playerPage, playerApi, create, trackPost, read, stored });
     } finally {
         await context?.close().catch(() => {});
         const failures = [];
@@ -94,6 +97,33 @@ async function postForm(page, id, credentials, fields) {
         action: 'editpost', post_ID: String(id), ...credentials, ...fields,
     }, timeout: 15_000 });
 }
+
+test('sole-assigned Player can open New Journal and create a REST Journal with the default Character Author', async ({ page, browser, baseURL }) => {
+    await withPlayer({ page, browser, baseURL }, async ({ user, suffix, bootstrap, playerPage, playerApi, trackPost, read }) => {
+        // withPlayer's bootstrap is deliberately the sole assigned Character.
+        const response = await playerPage.goto('/wp-admin/post-new.php?post_type=ligatura_diary', { waitUntil: 'domcontentloaded' });
+        const idField = playerPage.locator('#post_ID');
+        if (await idField.count()) trackPost('ligatura_diary', Number(await idField.inputValue()));
+        expect(response.status(), 'New Journal must not reject a server-derived default as an unverified form write').toBe(200);
+        await expect(idField).toBeAttached();
+        const autoDraftId = Number(await idField.inputValue());
+        trackPost('ligatura_diary', autoDraftId);
+        await expect(playerPage.locator('select[name="ligatura_diary_character"]')).toHaveValue(String(bootstrap.id));
+        const autoDraft = await read('ligatura_diary', autoDraftId);
+        expect(autoDraft.author).toBe(user.id);
+        expect(autoDraft.status).toBe('auto-draft');
+
+        const created = await wpRawRequest(playerPage, playerApi, 'wp/v2/ligatura_diary', {
+            method: 'POST', body: { title: `Fixture default Journal ${suffix}`, status: 'draft' },
+        });
+        trackPost('ligatura_diary', created.body?.id);
+        expect(created.status, 'REST creation validates registered metadata without requiring a classic form nonce').toBe(201);
+        const saved = await read('ligatura_diary', created.body.id);
+        expect(saved.author).toBe(user.id);
+        expect(saved.status).toBe('draft');
+        expect(saved.meta.ligatura_diary_character).toBe(bootstrap.id);
+    });
+});
 
 test('assigned Player saves metadata on draft, pending, private, and scheduled Characters', async ({ page, browser, baseURL }) => {
     await withPlayer({ page, browser, baseURL }, async ({ user, playerPage, playerApi, create, read }) => {

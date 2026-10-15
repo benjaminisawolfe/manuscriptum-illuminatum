@@ -736,6 +736,13 @@ function save_meta_boxes( int $post_id, \WP_Post $post ): void {
 		return;
 	}
 
+	// Only process actual form submissions. Journal bootstrap can populate
+	// server-derived defaults in $_POST during a GET or REST insert; the REST
+	// controller owns its metadata validation and persistence independently.
+	if ( 'POST' !== ( $_SERVER['REQUEST_METHOD'] ?? '' ) || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
+		return;
+	}
+
 	$fields = match ( $post->post_type ) {
 		'ligatura_character' => CharacterFields\get_character_fields(),
 		'ligatura_wiki'      => CharacterFields\get_wiki_fields(),
