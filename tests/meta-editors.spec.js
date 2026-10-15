@@ -113,7 +113,20 @@ for (const context of ['block', 'classic', 'assigned Player', 'Storyguide']) {
             expect(repeated.meta.ligatura_notes_public).toBe(stored.meta.ligatura_notes_public);
             if (classic) await openEditor(page, post.id, true);
             await expect(page.locator('.postbox .insert-media')).toHaveCount(0);
-            if (classic) await expect(page.locator('#wp-content-wrap .insert-media')).toBeVisible();
+            if (classic) {
+                const mainMedia = page.locator('#wp-content-wrap .insert-media');
+                await expect(mainMedia).toBeVisible();
+                await mainMedia.click();
+                const media = page.locator('.media-modal:visible');
+                await expect(media.getByRole('tab', { name: 'Upload files', exact: true })).toBeVisible();
+                await expect(media.getByRole('tab', { name: 'Media Library', exact: true })).toBeVisible();
+                await media.getByRole('button', { name: 'Close dialog', exact: true }).click();
+                await page.locator('#set-post-thumbnail').click();
+                await expect(media).toBeVisible();
+                await expect(media.getByRole('tab', { name: 'Upload files', exact: true })).toBeVisible();
+                await expect(media.getByRole('tab', { name: 'Media Library', exact: true })).toBeVisible();
+                await media.getByRole('button', { name: 'Close dialog', exact: true }).click();
+            }
             expect(errors).toEqual([]);
         } finally {
             await actor?.close();

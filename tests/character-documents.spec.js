@@ -88,7 +88,7 @@ async function documentForm(page, character, fields, nonce = true) {
     } });
 }
 
-test('assigned Player sees a separate Character Documents area with a direct-file privacy notice', async ({ page, browser, baseURL }) => {
+test('assigned Player sees a separate Character Documents area with a direct-file privacy notice', async ({ page, browser, baseURL }, testInfo) => {
     await withDocumentFixture({ page, browser, baseURL }, 'ligatura_player', async ({ actor, character }) => {
         const documents = await openDocuments(actor, character.id);
         await expect(documents).toContainText(/anyone with the (file )?link/i);
@@ -97,9 +97,14 @@ test('assigned Player sees a separate Character Documents area with a direct-fil
         await documents.getByRole('button', { name: 'Attach Document', exact: true }).click();
         const modal = actor.locator('.media-modal');
         await expect(modal).toBeVisible();
-        await expect(modal).toContainText('No documents found.');
+        const empty = modal.getByText('No documents found. Close this dialog and use Upload Document to add a file.', { exact: true });
+        await expect(empty).toBeVisible();
+        const emptyBounds = await empty.boundingBox();
+        const toolbar = await modal.locator('.attachments-browser > .media-toolbar').boundingBox();
+        expect(emptyBounds.y, 'The empty-library explanation must be below the toolbar').toBeGreaterThanOrEqual(toolbar.y + toolbar.height);
         await expect(modal.getByRole('button', { name: 'Select Files', exact: true })).toHaveCount(0);
         await expect(modal.getByRole('tab', { name: 'Upload files', exact: true })).toHaveCount(0);
+        await testInfo.attach('empty-document-library', { body: await modal.screenshot(), contentType: 'image/png' });
         await modal.getByRole('button', { name: /Close dialog/ }).click();
     });
 });
@@ -138,6 +143,11 @@ test('Player uploads multiple documents, saves, uses the media picker and unlink
             await documents.getByRole('button', { name: 'Attach Document', exact: true }).click();
             const modal = actor.locator('.media-modal');
             await expect(modal).toBeVisible();
+            const search = modal.getByRole('searchbox', { name: /Search/ });
+            await search.fill(`no-fixture-matches-${suffix}`);
+            await expect(modal.getByText('No documents found. Close this dialog and use Upload Document to add a file.', { exact: true })).toBeVisible();
+            await expect(modal.getByRole('button', { name: 'Select Files', exact: true })).toHaveCount(0);
+            await search.fill('');
             await modal.locator(`.attachment[data-id="${ids[0]}"]`).click();
             await modal.getByRole('button', { name: 'Attach Document', exact: true }).click();
             await expect(documents.locator('[data-document-id]')).toHaveCount(2);

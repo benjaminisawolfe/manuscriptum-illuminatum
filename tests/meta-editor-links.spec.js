@@ -86,7 +86,7 @@ test('Visual link toolbar creates and edits links without stealing focus or dupl
         await expect((await visualBody(page, 'ligatura_full_sheet')).locator('a')).toHaveAttribute('href', 'https://example.com/revised-sheet');
         await expect(await visualBody(page, 'ligatura_notes_public')).toHaveText('Notes keep their own caret and content.');
         const screenshot = info.outputPath('visual-link-editors.png');
-        await page.locator('.metabox-location-normal').screenshot({ path: screenshot });
+        await page.locator('#wp-ligatura_full_sheet-wrap').screenshot({ path: screenshot });
         await info.attach('Visual link and independent notes', { path: screenshot, contentType: 'image/png' });
         expect(errors).toEqual([]);
     } finally {

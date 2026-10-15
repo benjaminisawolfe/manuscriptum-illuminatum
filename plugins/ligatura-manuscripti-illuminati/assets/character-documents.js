@@ -111,7 +111,7 @@
 					const DocumentBrowser = wp.media.view.AttachmentsBrowser.extend( {
 						createUploader: function () {
 							this.uploader = new wp.media.View( { controller: this.controller, tagName: 'p' } );
-							this.uploader.$el.addClass( 'hidden' ).text( __( 'No documents found. Close this dialog and use Upload Document to add a file.', domain ) );
+							this.uploader.$el.addClass( 'uploader-inline hidden' ).text( __( 'No documents found. Close this dialog and use Upload Document to add a file.', domain ) );
 							this.views.add( this.uploader );
 						},
 					} );

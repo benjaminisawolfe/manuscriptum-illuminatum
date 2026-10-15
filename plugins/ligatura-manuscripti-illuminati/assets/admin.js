@@ -5,6 +5,7 @@
 
 	const metaEditorSelector = 'textarea.manuscriptum-illuminatum-meta-editor';
 	const boundEditors = new WeakSet();
+	const movingMetaBoxes = new WeakSet();
 	const isLiveEditor = function ( editor ) {
 		return editor.iframeElement && editor.iframeElement.contentDocument && editor.getBody() === editor.iframeElement.contentDocument.body;
 	};
@@ -46,7 +47,7 @@
 		}
 		document.querySelectorAll( metaEditorSelector ).forEach( function ( textarea ) {
 			// #metaboxes is Gutenberg's temporary, hidden source container.
-			if ( textarea.closest( '#metaboxes, .ui-sortable-helper' ) || ! textarea.isConnected ) {
+			if ( textarea.closest( '#metaboxes, .ui-sortable-helper' ) || ! textarea.isConnected || movingMetaBoxes.has( textarea.closest( '.postbox' ) ) ) {
 				return;
 			}
 			let editor = window.tinymce && tinymce.get( textarea.id );
@@ -71,15 +72,31 @@
 		}
 		jQuery( document ).on( 'tinymce-editor-init', bindMetaEditor );
 		jQuery( document ).on( 'sortstart', '.meta-box-sortables', function ( event, ui ) {
+			movingMetaBoxes.add( ui.item[ 0 ] );
 			ui.item.find( metaEditorSelector ).each( function () { removeMetaEditor( this ); } );
+		} );
+		jQuery( document ).on( 'sortstop', '.meta-box-sortables', function ( event, ui ) {
+			movingMetaBoxes.delete( ui.item[ 0 ] );
+			initializeMetaEditors();
 		} );
 		// WordPress's keyboard ordering buttons move the same iframe subtree.
 		document.addEventListener( 'click', function ( event ) {
 			const button = event.target.closest( '.handle-order-higher, .handle-order-lower' );
-			if ( button ) {
-				button.closest( '.postbox' ).querySelectorAll( metaEditorSelector ).forEach( removeMetaEditor );
+			if ( button && button.getAttribute( 'aria-disabled' ) !== 'true' ) {
+				const box = button.closest( '.postbox' );
+				movingMetaBoxes.add( box );
+				box.querySelectorAll( metaEditorSelector ).forEach( removeMetaEditor );
 			}
 		}, true );
+		// Mutation observers can run between capture and bubble listeners. Resume
+		// only after WordPress's document listener has actually moved the box.
+		window.addEventListener( 'click', function ( event ) {
+			const button = event.target.closest( '.handle-order-higher, .handle-order-lower' );
+			if ( button ) {
+				movingMetaBoxes.delete( button.closest( '.postbox' ) );
+				initializeMetaEditors();
+			}
+		} );
 		const observer = new MutationObserver( initializeMetaEditors );
 		observer.observe( document.getElementById( 'wpbody-content' ), {
 			childList: true, subtree: true, attributes: true, attributeFilter: [ 'class', 'style' ],
