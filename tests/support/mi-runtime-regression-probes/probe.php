@@ -21,7 +21,11 @@ add_action(
 
 		require_once __DIR__ . '/character-publication.php';
 		require_once __DIR__ . '/player-access.php';
+		require_once __DIR__ . '/meta-saving.php';
+		require_once __DIR__ . '/role-migration.php';
 		add_action( 'rest_api_init', '\LigaturaManuscriptiIlluminati\CharacterPublication\register_persistence_probe_route' );
 		add_action( 'rest_api_init', '\LigaturaManuscriptiIlluminati\PlayerAccess\register_rest_routes' );
+		add_action( 'rest_api_init', '\ManuscriptumRuntimeRegressionProbes\MetaSaving\register_routes' );
+		add_action( 'rest_api_init', '\ManuscriptumRuntimeRegressionProbes\Roles\register_routes' );
 	}
 );

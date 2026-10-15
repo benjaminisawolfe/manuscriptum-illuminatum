@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 const PLAYER_ROLE         = 'ligatura_player';
-const ROLE_VERSION        = '2026-08-29-player-access-v1';
+const ROLE_VERSION        = '2026-10-15-legacy-role-migration-v2';
 const ROLE_VERSION_OPTION = 'ligatura_manuscripti_illuminati_role_version';
 
 /**
@@ -126,6 +126,7 @@ function add_roles_and_capabilities(): void {
 		foreach ( $storyguide_caps as $capability => $grant ) {
 			$storyguide_role->add_cap( $capability, $grant );
 		}
+		update_role_name( 'ligatura_storyguide', __( 'Storyguide', 'ligatura-manuscripti-illuminati' ) );
 	}
 
 	$player_role = get_role( PLAYER_ROLE );
@@ -143,7 +144,124 @@ function add_roles_and_capabilities(): void {
 		}
 	}
 
-	update_option( ROLE_VERSION_OPTION, ROLE_VERSION, false );
+	if ( migrate_legacy_roles() ) {
+		update_option( ROLE_VERSION_OPTION, ROLE_VERSION, false );
+	}
+}
+
+/**
+ * Replace only the two roles shipped by the former Ars Campaign Core plugin.
+ * Roles and capability keys belong to the current site, including on multisite.
+ * A failed write leaves the legacy definition and version available for retry.
+ */
+function migrate_legacy_roles(): bool {
+	$roles = array( 'ars_player' => PLAYER_ROLE, 'ars_storyguide' => 'ligatura_storyguide' );
+	$stored_roles = get_option( wp_roles()->role_key, array() );
+
+	// Never remove a user's old access before the replacement is persisted.
+	foreach ( $roles as $canonical ) {
+		if ( ! isset( $stored_roles[ $canonical ] ) || $stored_roles[ $canonical ] !== wp_roles()->roles[ $canonical ] ) {
+			return false;
+		}
+	}
+
+	foreach ( $roles as $legacy => $canonical ) {
+		$legacy_role = get_role( $legacy );
+		$user_ids = get_users(
+			array( 'role' => $legacy, 'fields' => 'ID', 'blog_id' => get_current_blog_id() )
+		);
+		foreach ( $user_ids as $user_id ) {
+			$user = new \WP_User( (int) $user_id, '', get_current_blog_id() );
+			if ( ! migrate_legacy_user_role( $user, $legacy, $canonical, $legacy_role ? $legacy_role->capabilities : array() ) ) {
+				return false;
+			}
+		}
+		// Recheck persisted memberships before retiring the definition, including
+		// accounts added while this upgrade was running.
+		if ( get_users( array( 'role' => $legacy, 'fields' => 'ID', 'blog_id' => get_current_blog_id(), 'number' => 1, 'cache_results' => false ) ) ) {
+			return false;
+		}
+
+		if ( $legacy === get_option( 'default_role' ) ) {
+			update_option( 'default_role', $canonical );
+			if ( $canonical !== get_option( 'default_role' ) ) {
+				return false;
+			}
+		}
+
+		if ( $legacy_role ) {
+			remove_role( $legacy );
+			$stored_roles = get_option( wp_roles()->role_key, array() );
+			if ( isset( $stored_roles[ $legacy ] ) ) {
+				return false;
+			}
+		}
+	}
+
+	// The logged-in WP_User may have been loaded before init ran the upgrade.
+	wp_get_current_user()->for_site( get_current_blog_id() );
+	return true;
+}
+
+/**
+ * Preserve unrelated memberships and individual grants, using role APIs rather
+ * than set_role(), which would discard every other role. Keep unusual grants
+ * from the retired role on its existing members only, never on every Player.
+ *
+ * @param array<string,bool> $legacy_capabilities Retiring role's grants/denials.
+ */
+function migrate_legacy_user_role( \WP_User $user, string $legacy, string $canonical, array $legacy_capabilities ): bool {
+	$canonical_role = get_role( $canonical );
+	if ( ! $canonical_role || ! $user->exists() ) {
+		return false;
+	}
+	if ( ! array_key_exists( $legacy, $user->caps ) ) {
+		return false;
+	}
+	$effective_capabilities = $user->allcaps;
+	// Use WordPress's own merge rules on a copy: an existing canonical role
+	// keeps its original position, so another retained role can override it.
+	$replacement_user = clone $user;
+	unset( $replacement_user->caps[ $legacy ] );
+	$replacement_user->caps[ $canonical ] = true;
+	$replacement_capabilities = $replacement_user->get_role_caps();
+	foreach ( $legacy_capabilities as $capability => $grant ) {
+		// Another retained role may override the old role's grant or denial.
+		$grant = $effective_capabilities[ $capability ] ?? $grant;
+		if ( array_key_exists( $capability, $user->caps )
+			|| ( array_key_exists( $capability, $replacement_capabilities ) && $replacement_capabilities[ $capability ] === $grant ) ) {
+			continue;
+		}
+		// A role name in individual caps grants membership. Do not turn an
+		// unusual inherited capability into another role during migration.
+		if ( wp_roles()->is_role( $capability ) ) {
+			return false;
+		}
+		$user->add_cap( $capability, $grant );
+		if ( get_user_meta( $user->ID, $user->cap_key, true ) !== $user->caps ) {
+			return false;
+		}
+	}
+
+	$user->add_role( $canonical );
+	$stored_caps = get_user_meta( $user->ID, $user->cap_key, true );
+	if ( empty( $stored_caps[ $canonical ] ) ) {
+		return false;
+	}
+	if ( in_array( $legacy, $user->roles, true ) ) {
+		$user->remove_role( $legacy );
+	} else {
+		// Also repair known orphan memberships whose definition was removed.
+		$user->remove_cap( $legacy );
+	}
+	$stored_caps = get_user_meta( $user->ID, $user->cap_key, true );
+	if ( ! is_array( $stored_caps ) || array_key_exists( $legacy, $stored_caps ) || empty( $stored_caps[ $canonical ] ) ) {
+		return false;
+	}
+	if ( get_current_user_id() === $user->ID ) {
+		wp_get_current_user()->for_site( get_current_blog_id() );
+	}
+	return true;
 }
 
 /**

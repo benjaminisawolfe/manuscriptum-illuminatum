@@ -8,6 +8,10 @@ const routes = [
     '/ligatura-manuscripti-illuminati/v1/character-publication/persistence-probe',
     '/ligatura-manuscripti-illuminati/v1/player-access/status',
     '/ligatura-manuscripti-illuminati/v1/player-access/bootstrap-probe',
+    '/ligatura-manuscripti-illuminati/v1/meta-saving/stored',
+    '/ligatura-manuscripti-illuminati/v1/roles/inventory',
+    '/ligatura-manuscripti-illuminati/v1/roles/migration-probe',
+    '/ligatura-manuscripti-illuminati/v1/roles/backup',
 ];
 
 async function expectNoRuntimeProbes(page, api) {
@@ -23,7 +27,7 @@ const test = base.extend({
         expect(plugins.some(plugin => plugin.plugin === pluginId), 'Do not replace an existing test-support plugin').toBe(false);
         await expectNoRuntimeProbes(page, api);
         const { createZip } = await import('../../scripts/build-packages.mjs');
-        const names = ['probe.php', 'character-publication.php', 'player-access.php'];
+        const names = ['probe.php', 'character-publication.php', 'player-access.php', 'meta-saving.php', 'role-migration.php'];
         const entries = await Promise.all(names.map(async name => ({
             name: 'mi-runtime-regression-probes/' + name,
             content: await readFile(path.join(__dirname, 'mi-runtime-regression-probes', name)),

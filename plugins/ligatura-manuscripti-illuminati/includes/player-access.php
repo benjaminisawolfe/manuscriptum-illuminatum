@@ -226,15 +226,23 @@ function save_assignment( int $post_id, \WP_Post $post ): void {
 		return;
 	}
 
-	if ( ! isset( $_POST[ NONCE_NAME ] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST[ NONCE_NAME ] ) ), NONCE_ACTION ) ) {
+	if ( ! array_key_exists( ASSIGNED_PLAYER_META, $_POST ) ) {
 		return;
+	}
+
+	if ( ! isset( $_POST[ NONCE_NAME ] ) || ! is_scalar( $_POST[ NONCE_NAME ] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( (string) $_POST[ NONCE_NAME ] ) ), NONCE_ACTION ) ) {
+		wp_die( esc_html__( 'The Persona assignment save could not be verified. Reload the editor and try again.', 'ligatura-manuscripti-illuminati' ), '', array( 'response' => 403 ) );
 	}
 
 	if ( ! can_manage_assignments() || ! current_user_can( 'edit_post', $post_id ) ) {
-		return;
+		wp_die( esc_html__( 'You cannot change Persona assignments.', 'ligatura-manuscripti-illuminati' ), '', array( 'response' => 403 ) );
 	}
 
-	$assignment = sanitize_assigned_player_id( $_POST[ ASSIGNED_PLAYER_META ] ?? 0 );
+	if ( ! is_scalar( $_POST[ ASSIGNED_PLAYER_META ] ) ) {
+		wp_die( esc_html__( 'Choose a valid Persona assignment.', 'ligatura-manuscripti-illuminati' ), '', array( 'response' => 400 ) );
+	}
+
+	$assignment = sanitize_assigned_player_id( $_POST[ ASSIGNED_PLAYER_META ] );
 
 	if ( $assignment > 0 ) {
 		update_post_meta( $post_id, ASSIGNED_PLAYER_META, $assignment );
@@ -291,6 +299,125 @@ function reassign_deleted_user_personae( int $user_id ): void {
 }
 
 /**
+ * Keep the author-preserving permission bridge local to one verified form save.
+ *
+ * @param array<string,int>|null $context Verified post and current user IDs.
+ * @return array<string,int>
+ */
+function player_character_form_context( ?array $context = null ): array {
+	static $verified = array();
+
+	if ( null !== $context ) {
+		$verified = $context;
+	}
+
+	return $verified;
+}
+
+/**
+ * Preserve technical ownership when a Player submits an assigned Persona form.
+ *
+ * Core's _wp_translate_postdata() checks edit_others_posts even when an existing
+ * other author's ID is unchanged. Validate this particular form before allowing
+ * that narrow check; Players still cannot select a different author or status.
+ */
+function prepare_player_character_form(): void {
+	global $pagenow;
+
+	if ( 'post.php' !== $pagenow || 'POST' !== ( $_SERVER['REQUEST_METHOD'] ?? '' ) || ! is_restricted_player() ) {
+		return;
+	}
+
+	if ( ! isset( $_POST['action'], $_POST['post_ID'] ) || ! is_scalar( $_POST['action'] ) || ! is_scalar( $_POST['post_ID'] ) || 'editpost' !== wp_unslash( (string) $_POST['action'] ) ) {
+		return;
+	}
+
+	$post_id = absint( $_POST['post_ID'] );
+	$post    = get_post( $post_id );
+	$user_id = get_current_user_id();
+
+	if ( ! $post instanceof \WP_Post || 'ligatura_character' !== $post->post_type || ! user_is_assigned_to_character( $user_id, $post_id ) ) {
+		return;
+	}
+
+	if ( ! isset( $_POST['_wpnonce'] ) || ! is_scalar( $_POST['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( (string) $_POST['_wpnonce'] ) ), 'update-post_' . $post_id ) ) {
+		wp_die( esc_html__( 'The Persona save could not be verified. Reload the editor and try again.', 'ligatura-manuscripti-illuminati' ), '', array( 'response' => 403 ) );
+	}
+
+	if ( isset( $_POST['post_type'] ) && ( ! is_scalar( $_POST['post_type'] ) || 'ligatura_character' !== wp_unslash( (string) $_POST['post_type'] ) ) ) {
+		wp_die( esc_html__( 'Players cannot change a Persona post type.', 'ligatura-manuscripti-illuminati' ), '', array( 'response' => 403 ) );
+	}
+
+	foreach ( array( 'post_author', 'post_author_override' ) as $author_field ) {
+		if ( isset( $_POST[ $author_field ] ) && ( ! is_scalar( $_POST[ $author_field ] ) || (int) $_POST[ $author_field ] !== (int) $post->post_author ) ) {
+			wp_die( esc_html__( 'Players cannot change a Persona author.', 'ligatura-manuscripti-illuminati' ), '', array( 'response' => 403 ) );
+		}
+	}
+
+	// edit_post() translates visibility before its status checks. Preserve both
+	// visibility and password, even when other core checks would silently drop them.
+	$visibility = 'public';
+	if ( '' !== $post->post_password ) {
+		$visibility = 'password';
+	}
+	if ( 'private' === $post->post_status ) {
+		$visibility = 'private';
+	}
+
+	if ( ( isset( $_POST['visibility'] ) && ( ! is_scalar( $_POST['visibility'] ) || $visibility !== wp_unslash( (string) $_POST['visibility'] ) ) )
+		|| ( isset( $_POST['post_password'] ) && ( ! is_scalar( $_POST['post_password'] ) || $post->post_password !== wp_unslash( (string) $_POST['post_password'] ) ) )
+	) {
+		wp_die( esc_html__( 'Players cannot change a Persona visibility or password.', 'ligatura-manuscripti-illuminati' ), '', array( 'response' => 403 ) );
+	}
+
+	// A changed publication date can turn publish into future (or the reverse)
+	// without a changed post_status. Accept unchanged hidden editor date fields,
+	// but reject either direct date writes or the components core translates.
+	foreach ( array( 'post_date', 'post_date_gmt' ) as $date_field ) {
+		if ( isset( $_POST[ $date_field ] ) && ( ! is_scalar( $_POST[ $date_field ] ) || $post->$date_field !== str_replace( 'T', ' ', trim( wp_unslash( (string) $_POST[ $date_field ] ) ) ) ) ) {
+			wp_die( esc_html__( 'Players cannot change a Persona publication date.', 'ligatura-manuscripti-illuminati' ), '', array( 'response' => 403 ) );
+		}
+	}
+
+	$date_parts = sscanf( $post->post_date, '%d-%d-%d %d:%d:%d' );
+
+	foreach ( array( 'aa', 'mm', 'jj', 'hh', 'mn', 'ss' ) as $index => $date_part ) {
+		if ( isset( $_POST[ $date_part ] ) && ( ! is_scalar( $_POST[ $date_part ] ) || ! preg_match( '/^\d+$/', (string) $_POST[ $date_part ] ) || (int) $_POST[ $date_part ] !== ( $date_parts[ $index ] ?? -1 ) ) ) {
+			wp_die( esc_html__( 'Players cannot change a Persona publication date.', 'ligatura-manuscripti-illuminati' ), '', array( 'response' => 403 ) );
+		}
+
+		// Hidden values can independently activate core's date reconstruction,
+		// including with missing components. The stored direct dates remain final.
+		unset( $_POST[ 'hidden_' . $date_part ] );
+	}
+	unset( $_POST['edit_date'] );
+
+	$status = $post->post_status;
+
+	if ( isset( $_POST['post_status'] ) ) {
+		$status = is_scalar( $_POST['post_status'] ) ? sanitize_key( wp_unslash( (string) $_POST['post_status'] ) ) : '';
+	}
+
+	// Account for the alternate status buttons accepted by core's form translator.
+	foreach ( array( 'saveasdraft' => 'draft', 'saveasprivate' => 'private', 'publish' => 'publish', 'advanced' => 'draft', 'pending' => 'pending' ) as $button => $button_status ) {
+		if ( isset( $_POST[ $button ] ) && '' !== $_POST[ $button ] && ! ( 'publish' === $button && 'private' === $status ) ) {
+			$status = $button_status;
+		}
+	}
+
+	if ( $status !== $post->post_status ) {
+		wp_die( esc_html__( 'Players cannot change the publication status of assigned Personae.', 'ligatura-manuscripti-illuminati' ), '', array( 'response' => 403 ) );
+	}
+
+	// Core otherwise defaults an omitted post_author to the current Player.
+	$_POST['post_type']     = $post->post_type;
+	$_POST['post_author']   = (string) $post->post_author;
+	$_POST['post_date']     = $post->post_date;
+	$_POST['post_date_gmt'] = $post->post_date_gmt;
+	player_character_form_context( array( 'post_id' => $post_id, 'user_id' => $user_id ) );
+}
+
+/**
  * Enforce assignment/ownership at WordPress's post meta-capability boundary.
  *
  * @param string[] $caps Required primitive capabilities.
@@ -298,6 +425,20 @@ function reassign_deleted_user_personae( int $user_id ): void {
  * @return string[]
  */
 function map_player_post_meta_caps( array $caps, string $cap, int $user_id, array $args ): array {
+	if ( 'edit_others_ligatura_characters' === $cap ) {
+		$context = player_character_form_context();
+
+		if ( $user_id === get_current_user_id()
+			&& $user_id === ( $context['user_id'] ?? 0 )
+			&& is_restricted_player( $user_id )
+			&& user_is_assigned_to_character( $user_id, $context['post_id'] ?? 0 )
+		) {
+			return array( 'ligatura_edit_assigned_personae' );
+		}
+
+		return $caps;
+	}
+
 	$owned_capabilities = array(
 		'edit_post',
 		'delete_post',

@@ -432,6 +432,9 @@ function parse_id_list( mixed $value ): array {
 function render_relationship_select_field( int $post_id, array $field, array $current_ids ): void {
 	$options = get_relationship_select_options( $post_id, $field['key'] );
 
+	// Browsers omit a multi-select when nothing is selected. Submit an explicit
+	// empty item so clearing it differs from a request that omits this field.
+	echo '<input type="hidden" name="' . esc_attr( $field['key'] ) . '[]" value="" />';
 	echo '<select id="' . esc_attr( $field['key'] ) . '" name="' . esc_attr( $field['key'] ) . '[]" multiple="multiple" size="8" data-manuscriptum-illuminatum-relationship-select>';
 
 	foreach ( $options as $entity_id => $label ) {
@@ -733,29 +736,38 @@ function save_meta_boxes( int $post_id, \WP_Post $post ): void {
 		return;
 	}
 
-	if ( ! isset( $_POST[ NONCE_NAME ] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST[ NONCE_NAME ] ) ), NONCE_ACTION ) ) {
+	$fields = match ( $post->post_type ) {
+		'ligatura_character' => CharacterFields\get_character_fields(),
+		'ligatura_wiki'      => CharacterFields\get_wiki_fields(),
+		'ligatura_diary'     => CharacterFields\get_diary_fields(),
+		'ligatura_covenant'  => CharacterFields\get_covenant_fields(),
+	};
+
+	if ( ! isset( $_POST[ NONCE_NAME ] ) ) {
+		// Ordinary REST/title saves have no form metadata. Submitted form fields,
+		// however, must not appear to save successfully without their nonce.
+		$keys = array_merge( array_column( $fields, 'key' ), array( PrivateNotes\META_KEY ) );
+		if ( array_intersect( $keys, array_keys( $_POST ) ) ) {
+			wp_die( esc_html__( 'The metadata save could not be verified. Reload the editor and try again.', 'ligatura-manuscripti-illuminati' ), '', array( 'response' => 403 ) );
+		}
 		return;
+	}
+	if ( ! is_string( $_POST[ NONCE_NAME ] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST[ NONCE_NAME ] ) ), NONCE_ACTION ) ) {
+		wp_die( esc_html__( 'The metadata save could not be verified. Reload the editor and try again.', 'ligatura-manuscripti-illuminati' ), '', array( 'response' => 403 ) );
 	}
 
 	if ( ! current_user_can( 'edit_post', $post_id ) ) {
-		return;
+		wp_die( esc_html__( 'You are not allowed to edit this entry.', 'ligatura-manuscripti-illuminati' ), '', array( 'response' => 403 ) );
 	}
 
-	if ( 'ligatura_character' === $post->post_type ) {
-		save_fields( $post_id, CharacterFields\get_character_fields() );
+	if ( ( array_key_exists( PlayerAccess\ASSIGNED_PLAYER_META, $_POST ) && ! PlayerAccess\can_manage_assignments() )
+		|| ( array_key_exists( PrivateNotes\META_KEY, $_POST ) && ! PrivateNotes\can_view_storyguide_notes() ) ) {
+		wp_die( esc_html__( 'You are not allowed to change assignments or Storyguide notes.', 'ligatura-manuscripti-illuminati' ), '', array( 'response' => 403 ) );
 	}
 
+	save_fields( $post_id, $fields );
 	if ( 'ligatura_wiki' === $post->post_type ) {
-		save_fields( $post_id, CharacterFields\get_wiki_fields() );
 		save_storyguide_notes( $post_id );
-	}
-
-	if ( 'ligatura_diary' === $post->post_type ) {
-		save_fields( $post_id, CharacterFields\get_diary_fields() );
-	}
-
-	if ( 'ligatura_covenant' === $post->post_type ) {
-		save_fields( $post_id, CharacterFields\get_covenant_fields() );
 	}
 }
 
@@ -766,13 +778,35 @@ function save_meta_boxes( int $post_id, \WP_Post $post ): void {
  * @param array<int,array<string,string>> $fields  Field definitions.
  */
 function save_fields( int $post_id, array $fields ): void {
+	// Validate submitted fields before writing this collection. A rejected field
+	// must produce an error response, including in the block editor's separate
+	// meta-box request, instead of an apparent successful update.
 	foreach ( $fields as $field ) {
-		$value     = $_POST[ $field['key'] ] ?? '';
-		$raw_value = is_scalar( $value ) ? (string) $value : '';
-
-		if ( 'saga_date' === $field['sanitize'] && '' !== trim( $raw_value ) && ! JournalDates\is_valid_saga_date( sanitize_text_field( wp_unslash( $raw_value ) ) ) ) {
+		if ( ! array_key_exists( $field['key'], $_POST ) ) {
 			continue;
 		}
+		if ( ! current_user_can( 'edit_post_meta', $post_id, $field['key'] ) ) {
+			wp_die( esc_html__( 'You are not allowed to edit this metadata field.', 'ligatura-manuscripti-illuminati' ), '', array( 'response' => 403 ) );
+		}
+		$value = $_POST[ $field['key'] ];
+		$is_multiple = str_ends_with( $field['type'], '_multiselect' );
+		if ( ( ! $is_multiple && ! is_scalar( $value ) ) || ( is_array( $value ) && count( array_filter( $value, 'is_scalar' ) ) !== count( $value ) ) ) {
+			wp_die( esc_html__( 'The submitted metadata value is invalid.', 'ligatura-manuscripti-illuminati' ), '', array( 'response' => 400 ) );
+		}
+		if ( 'saga_date' === $field['sanitize'] && '' !== trim( (string) $value ) && ! JournalDates\is_valid_saga_date( sanitize_text_field( wp_unslash( (string) $value ) ) ) ) {
+			wp_die( esc_html__( 'The Saga Date is invalid. Use a valid YYYY-MM-DD date.', 'ligatura-manuscripti-illuminati' ), '', array( 'response' => 400 ) );
+		}
+		if ( 'character_author' === $field['sanitize'] && absint( $value ) > 0 && ! can_select_character( absint( $value ) ) ) {
+			wp_die( esc_html__( 'You are not allowed to use that Character Author.', 'ligatura-manuscripti-illuminati' ), '', array( 'response' => 403 ) );
+		}
+	}
+
+	foreach ( $fields as $field ) {
+		if ( ! array_key_exists( $field['key'], $_POST ) ) {
+			continue;
+		}
+
+		$value = $_POST[ $field['key'] ];
 
 		$sanitized = call_user_func( get_sanitize_callback( $field['sanitize'] ), $value );
 
@@ -819,10 +853,10 @@ function validate_relationship_ids( int $post_id, string $field_key, array $ids 
  * @param int $post_id Post ID.
  */
 function save_storyguide_notes( int $post_id ): void {
-	if ( ! PrivateNotes\can_view_storyguide_notes() ) {
+	if ( ! array_key_exists( PrivateNotes\META_KEY, $_POST ) || ! PrivateNotes\can_view_storyguide_notes() ) {
 		return;
 	}
 
-	$value = $_POST[ PrivateNotes\META_KEY ] ?? '';
+	$value = $_POST[ PrivateNotes\META_KEY ];
 	update_post_meta( $post_id, PrivateNotes\META_KEY, sanitize_rich_text( $value ) );
 }
