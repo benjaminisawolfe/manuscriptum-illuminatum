@@ -49,4 +49,6 @@
 - [x] Commit/push branch and deploy both canonical ZIPs through the authorized staging replacement flow.
 - [x] Run targeted Pass 2 and Pass 1 regressions, relevant existing desktop/mobile visual and accessibility suites. Inspect mismatches, never update baselines merely to pass.
 - [x] Independently review authorization, upload validation and lifecycle changes; resolve material findings and rerun affected tests.
-- [ ] Commit the report with root cause, format results, exact privacy limits, test matrix and rollback/acceptance instructions; push and open a review-ready PR without merging.
+- [x] Commit the report with root cause, format results, exact privacy limits, test matrix and rollback/acceptance instructions; push and open a review-ready PR without merging.
+
+Review-ready handoff: [PR #8](https://github.com/benjaminisawolfe/manuscriptum-illuminatum/pull/8).
