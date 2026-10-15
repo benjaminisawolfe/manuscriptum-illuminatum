@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.2 — 2026-10-15
+
+Maintenance release.
+
+- Includes article-authored H1–H6 headings in Speculum tables of contents, in document order and up to the configured maximum level.
+- Adds maximum-level choices from H1 only through H1–H6, retaining the default of H1–H4 and saved numeric values 2/3/4, now inclusive of H1.
+- Preserves valid, unique authored heading anchors and generates deterministic IDs that avoid collisions with other article IDs.
+- Improves desktop and mobile hierarchy with progressive H1–H6 indentation and wrapping for long headings, preserving keyboard navigation and visible focus.
+- Adds regression coverage for heading levels, settings compatibility, fragment navigation, content scoping, privacy boundaries, responsive layout, and automated accessibility checks.
+
 ## 1.0.1 — 2026-09-05
 
 Maintenance release.
