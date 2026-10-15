@@ -1031,7 +1031,8 @@ textarea:focus-visible {
 	padding-top: 0.85rem;
 }
 
-.manuscriptum-illuminatum-character-notes__body {
+.manuscriptum-illuminatum-character-notes__body,
+.manuscriptum-illuminatum-character-full-sheet > .manuscriptum-illuminatum-content {
 	display: flow-root;
 	margin-top: 1rem;
 }
