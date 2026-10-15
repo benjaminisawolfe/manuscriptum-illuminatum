@@ -38,11 +38,13 @@ Open **Appearance → Customize → Paginae Manuscripti Illuminati**. Depending 
 - **Header Identity:** short seal text used when no custom logo is selected.
 - **Typography:** body, heading, navigation, and accent fonts.
 - **Colours and Texture:** the ink, parchment, rubric, gold, blue, and green palette plus parchment texture.
-- **Speculum Entries:** automatic table of contents and heading depth.
+- **Speculum Entries:** automatic table of contents and maximum included heading level, from **H1 only** through **H1–H6**. The default remains **H1–H4** (numeric value `4`). Existing saved values `2`, `3`, and `4` retain their maximum level and now include article-authored H1 headings; their labels deliberately change from H2-based ranges to H1-based ranges. No setting is reset or migrated.
 - **Front Page Sections:** number of full-width latest Commentarii rows.
 - **Footer:** plain-text copyright line. `{year}` inserts the current year. Saving an empty value removes the line without leaving empty punctuation.
 
 The footer accepts plain text, not arbitrary HTML. This prevents unsafe markup from being stored or displayed.
+
+The Speculum table of contents follows the order of headings inside the entry body and appears only when at least two nonempty headings meet the selected maximum level. It excludes the generated entry title, public summary, sidebars and Storyguide notes. H1 is least indented, with progressively deeper H2–H6 levels even when an intermediate level is absent. Valid, unique authored heading IDs are preserved; generated IDs avoid other IDs throughout the entry body. Turning off the automatic table of contents leaves the content unchanged.
 
 ## Sidebars and logo
 

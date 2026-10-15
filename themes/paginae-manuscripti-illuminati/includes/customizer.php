@@ -253,13 +253,16 @@ function paginae_manuscripti_illuminati_customize_register( WP_Customize_Manager
 	$wp_customize->add_control(
 		'paginae_manuscripti_illuminati_wiki_toc_depth',
 		array(
-			'label'   => __( 'Table of Contents Depth', 'paginae-manuscripti-illuminati' ),
+			'label'   => __( 'Maximum Table of Contents Heading Level', 'paginae-manuscripti-illuminati' ),
 			'section' => 'paginae_manuscripti_illuminati_wiki',
 			'type'    => 'select',
 			'choices' => array(
-				2 => __( 'H2 only', 'paginae-manuscripti-illuminati' ),
-				3 => __( 'H2 and H3', 'paginae-manuscripti-illuminati' ),
-				4 => __( 'H2, H3, and H4', 'paginae-manuscripti-illuminati' ),
+				1 => __( 'H1 only', 'paginae-manuscripti-illuminati' ),
+				2 => __( 'H1–H2', 'paginae-manuscripti-illuminati' ),
+				3 => __( 'H1–H3', 'paginae-manuscripti-illuminati' ),
+				4 => __( 'H1–H4', 'paginae-manuscripti-illuminati' ),
+				5 => __( 'H1–H5', 'paginae-manuscripti-illuminati' ),
+				6 => __( 'H1–H6', 'paginae-manuscripti-illuminati' ),
 			),
 		)
 	);
@@ -366,7 +369,7 @@ function paginae_manuscripti_illuminati_sanitize_font_choice( mixed $value ): st
  * @param mixed $value Raw value.
  */
 function paginae_manuscripti_illuminati_sanitize_toc_depth( mixed $value ): int {
-	return min( 4, max( 2, absint( $value ) ) );
+	return min( 6, max( 1, absint( $value ) ) );
 }
 
 /**

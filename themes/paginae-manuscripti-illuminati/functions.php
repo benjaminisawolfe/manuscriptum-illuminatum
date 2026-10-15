@@ -1419,7 +1419,7 @@ function paginae_manuscripti_illuminati_add_wiki_toc( string $content ): string 
 		return $content;
 	}
 
-	$depth    = min( 4, max( 2, absint( get_theme_mod( 'paginae_manuscripti_illuminati_wiki_toc_depth', 4 ) ) ) );
+	$depth    = paginae_manuscripti_illuminati_sanitize_toc_depth( get_theme_mod( 'paginae_manuscripti_illuminati_wiki_toc_depth', 4 ) );
 	$previous = libxml_use_internal_errors( true );
 	$document = new DOMDocument();
 	$loaded   = $document->loadHTML(
@@ -1434,15 +1434,39 @@ function paginae_manuscripti_illuminati_add_wiki_toc( string $content ): string 
 	}
 
 	$xpath    = new DOMXPath( $document );
-	$headings = $xpath->query( '//*[@id="manuscriptum-illuminatum-toc-root"]//*[self::h2 or self::h3 or self::h4]' );
+	$headings = $xpath->query( '//*[@id="manuscriptum-illuminatum-toc-root"]//*[self::h1 or self::h2 or self::h3 or self::h4 or self::h5 or self::h6]' );
 
 	if ( ! $headings ) {
 		return $content;
 	}
 
-	$items    = array();
-	$used_ids = array();
-	$index    = 1;
+	$items     = array();
+	$used_ids  = array();
+	$id_owners = array();
+	$index     = 1;
+
+	// Reserve every authored ID, including later headings and nonheading targets.
+	$elements_with_ids = $xpath->query( '//*[@id="manuscriptum-illuminatum-toc-root"]//*[@id]' );
+
+	if ( $elements_with_ids ) {
+		foreach ( $elements_with_ids as $element ) {
+			$id = $element->getAttribute( 'id' );
+
+			if ( '' === $id ) {
+				continue;
+			}
+
+			$used_ids[] = $id;
+			$eligible   = preg_match( '/^h[1-6]$/', $element->nodeName )
+				&& absint( substr( $element->nodeName, 1 ) ) <= $depth
+				&& '' !== trim( $element->textContent );
+
+			// Unprocessed elements keep their IDs; otherwise the first heading owns it.
+			if ( ! isset( $id_owners[ $id ] ) || ! $eligible ) {
+				$id_owners[ $id ] = $element;
+			}
+		}
+	}
 
 	foreach ( $headings as $heading ) {
 		if ( ! $heading instanceof DOMElement ) {
@@ -1451,7 +1475,7 @@ function paginae_manuscripti_illuminati_add_wiki_toc( string $content ): string 
 
 		$level = absint( substr( $heading->nodeName, 1 ) );
 
-		if ( $level < 2 || $level > $depth ) {
+		if ( $level < 1 || $level > $depth ) {
 			continue;
 		}
 
@@ -1463,10 +1487,14 @@ function paginae_manuscripti_illuminati_add_wiki_toc( string $content ): string 
 		}
 
 		$id = $heading->getAttribute( 'id' );
-		$id = '' !== $id ? sanitize_title( $id ) : sanitize_title( $text );
-		$id = $id ?: 'wiki-section-' . $index;
-		$id = paginae_manuscripti_illuminati_unique_toc_id( $id, $used_ids );
-		$heading->setAttribute( 'id', $id );
+
+		// HTML IDs are case-sensitive and may contain punctuation or Unicode.
+		if ( '' === $id || preg_match( '/[\x00-\x20\x7f]/', $id ) || ! $id_owners[ $id ]->isSameNode( $heading ) ) {
+			$id = sanitize_title( '' !== $id ? $id : $text );
+			$id = $id ?: 'wiki-section-' . $index;
+			$id = paginae_manuscripti_illuminati_unique_toc_id( $id, $used_ids );
+			$heading->setAttribute( 'id', $id );
+		}
 
 		$items[] = array(
 			'id'    => $id,
@@ -1502,7 +1530,7 @@ function paginae_manuscripti_illuminati_add_wiki_toc( string $content ): string 
 add_filter( 'the_content', 'paginae_manuscripti_illuminati_add_wiki_toc', 12 );
 
 /**
- * Make heading IDs unique within a TOC.
+ * Make generated heading IDs unique within the processed article content.
  *
  * @param string   $base_id  Desired ID.
  * @param string[] $used_ids Existing IDs.
@@ -1534,7 +1562,7 @@ function paginae_manuscripti_illuminati_render_wiki_toc( array $items ): string 
 		<ol>
 			<?php foreach ( $items as $item ) : ?>
 				<li class="manuscriptum-illuminatum-wiki-toc__item manuscriptum-illuminatum-wiki-toc__item--level-<?php echo esc_attr( (string) $item['level'] ); ?>">
-					<a href="#<?php echo esc_attr( $item['id'] ); ?>"><?php echo esc_html( $item['text'] ); ?></a>
+					<a href="#<?php echo esc_attr( rawurlencode( $item['id'] ) ); ?>"><?php echo esc_html( $item['text'] ); ?></a>
 				</li>
 			<?php endforeach; ?>
 		</ol>
