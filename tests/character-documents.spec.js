@@ -2,10 +2,13 @@ const { test, expect } = require('./support/runtime-probes');
 const { withDocumentFixture } = require('./support/document-fixture');
 const { documentFiles } = require('./support/document-files');
 const { wpRequest, wpRawRequest, uploadFixtureImage } = require('./support/personae-fixture');
+const AxeBuilder = require('@axe-core/playwright').default;
+const { readFile } = require('node:fs/promises');
 
 const metaKey = '_ligatura_character_documents';
 const nonceKey = 'ligatura_character_documents_nonce';
 const route = id => `ligatura-manuscripti-illuminati/v1/characters/${id}/documents`;
+const welcomeHandlers = new WeakSet();
 
 test.use({ actionTimeout: 15_000, navigationTimeout: 20_000, trace: 'off' });
 test.beforeEach(async ({}, testInfo) => {
@@ -14,13 +17,20 @@ test.beforeEach(async ({}, testInfo) => {
 });
 
 async function openDocuments(page, id) {
+    const welcome = page.getByRole('dialog', { name: /Welcome/ });
+    if (!welcomeHandlers.has(page)) {
+        await page.addLocatorHandler(welcome, async dialog => {
+            await dialog.getByRole('button', { name: /Close/ }).click();
+        });
+        welcomeHandlers.add(page);
+    }
     await page.goto(`/wp-admin/post.php?post=${id}&action=edit`, { waitUntil: 'domcontentloaded' });
     const takeover = page.locator('a[href*="get-post-lock=1"]');
     if (await takeover.count()) await takeover.first().click();
-    const welcome = page.getByRole('dialog', { name: /Welcome/ });
-    if (await welcome.isVisible()) await welcome.getByRole('button', { name: /Close/ }).click();
+    await page.waitForLoadState('load');
     const presenter = page.locator('.edit-post-meta-boxes-main__presenter > button[aria-expanded]');
-    if (await presenter.count() && await presenter.getAttribute('aria-expanded') === 'false') await presenter.evaluate(button => button.click());
+    await expect(presenter).toBeVisible();
+    if (await presenter.getAttribute('aria-expanded') === 'false') await presenter.evaluate(button => button.click());
     const documents = page.getByRole('region', { name: 'Character Documents', exact: true });
     await expect(documents).toBeVisible();
     return documents;
@@ -84,6 +94,13 @@ test('assigned Player sees a separate Character Documents area with a direct-fil
         await expect(documents).toContainText(/anyone with the (file )?link/i);
         await expect(documents.getByRole('button', { name: 'Upload Document', exact: true })).toBeVisible();
         await expect(documents.getByRole('button', { name: 'Attach Document', exact: true })).toBeVisible();
+        await documents.getByRole('button', { name: 'Attach Document', exact: true }).click();
+        const modal = actor.locator('.media-modal');
+        await expect(modal).toBeVisible();
+        await expect(modal).toContainText('No documents found.');
+        await expect(modal.getByRole('button', { name: 'Select Files', exact: true })).toHaveCount(0);
+        await expect(modal.getByRole('tab', { name: 'Upload files', exact: true })).toHaveCount(0);
+        await modal.getByRole('button', { name: /Close dialog/ }).click();
     });
 });
 
@@ -133,9 +150,19 @@ test('Player uploads multiple documents, saves, uses the media picker and unlink
             await expect(actor.getByRole('region', { name: 'Full Sheet', exact: true })).toContainText('Fixture full sheet.');
             const descriptors = await wpRequest(page, api, route(character.id));
             for (const document of descriptors.documents) {
-                await expect(section.getByRole('link', { name: document.title, exact: true })).toHaveAttribute('href', document.url);
+                await expect(section.locator('a').filter({ hasText: document.title }).and(section.locator(`a[href="${document.url}"]`))).toHaveCount(1);
             }
             await testInfo.attach('character-documents-front-end', { body: await section.screenshot(), contentType: 'image/png' });
+            for (const [label, viewport] of [['desktop', { width: 1280, height: 900 }], ['mobile', { width: 393, height: 851 }]]) {
+                await actor.setViewportSize(viewport);
+                const accessibility = await new AxeBuilder({ page: actor })
+                    .include('.manuscriptum-illuminatum-character-documents, .manuscriptum-illuminatum-character-full-sheet')
+                    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+                await testInfo.attach(`character-documents-${label}-accessibility`, { body: JSON.stringify(accessibility.violations, null, 2), contentType: 'application/json' });
+                expect(accessibility.violations, `Full Sheet and Documents accessibility at ${label} viewport`).toEqual([]);
+                expect(await actor.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `The ${label} Character page must not overflow horizontally`).toBe(true);
+                await testInfo.attach(`character-documents-${label}`, { body: await section.screenshot(), contentType: 'image/png' });
+            }
             expect(errors).toEqual([]);
         } finally {
             actor.off('response', trackUpload);
@@ -147,6 +174,8 @@ test('Player uploads multiple documents, saves, uses the media picker and unlink
 for (const role of ['administrator', 'ligatura_storyguide', 'ligatura_player']) {
     test(`${role} can upload, attach and unlink documents through the authorized API`, async ({ page, browser, baseURL, regressionProbes }) => {
         await withDocumentFixture({ page, browser, baseURL }, role, async ({ api, actor, actorApi, character, user, suffix, track }) => {
+            const generic = await wpRequest(page, api, `ligatura-manuscripti-illuminati/v1/meta-saving/stored?post_id=${character.id}&user_id=${user.id}`);
+            expect(generic.document_caps, 'Generic metadata writers, including XML-RPC custom_fields, cannot bypass the dedicated validator').toEqual({ add: false, edit: false, delete: false });
             const files = documentFiles(suffix);
             const result = await upload(actor, actorApi, character.id, files.pdf, track);
             expect(result.ok, `Permitted PDF upload returned HTTP ${result.status}`).toBe(true);
@@ -176,9 +205,20 @@ for (const role of ['administrator', 'ligatura_storyguide', 'ligatura_player']) 
 
 test('safe document formats are accepted or report precise host identification limits', async ({ page, browser, baseURL, regressionProbes }, testInfo) => {
     await withDocumentFixture({ page, browser, baseURL }, 'ligatura_player', async ({ api, actor, actorApi, character, suffix, track }) => {
-        const files = documentFiles(suffix), accepted = [];
-        for (const extension of ['pdf', 'txt', 'rtf', 'docx', 'odt']) {
+        const files = documentFiles(suffix), accepted = [], results = [];
+        const extensions = ['pdf', 'txt', 'rtf', 'docx', 'odt'];
+        if (process.env.MANUSCRIPTUM_TEST_DOC_FIXTURE) {
+            const buffer = await readFile(process.env.MANUSCRIPTUM_TEST_DOC_FIXTURE).catch(() => {
+                throw new Error('The optional legacy Word fixture could not be read.');
+            });
+            files.doc = { name: `fixture-document-${suffix}.doc`, mimeType: 'application/msword', buffer };
+            extensions.push('doc');
+        } else {
+            testInfo.annotations.push({ type: 'coverage-limitation', description: 'No genuine binary Word DOC fixture was supplied; legacy DOC acceptance was not exercised.' });
+        }
+        for (const extension of extensions) {
             const result = await upload(actor, actorApi, character.id, files[extension], track);
+            results.push({ extension, status: result.status, accepted: result.ok, error: result.ok ? null : result.body.message });
             if (['pdf', 'txt'].includes(extension) || result.ok) {
                 expect(result.ok, `${extension.toUpperCase()} must upload safely; HTTP ${result.status}`).toBe(true);
                 expect(result.body.type).toBe(extension.toUpperCase());
@@ -189,6 +229,7 @@ test('safe document formats are accepted or report precise host identification l
                 testInfo.annotations.push({ type: 'host-format-limitation', description: `${extension.toUpperCase()}: ${result.body.message}` });
             }
         }
+        await testInfo.attach('document-format-results', { body: JSON.stringify(results, null, 2), contentType: 'application/json' });
         await wpRequest(actor, actorApi, route(character.id), { method: 'POST', body: { ids: accepted } });
         expect(await storedIds(page, api, character.id)).toEqual(accepted);
     });
@@ -309,8 +350,10 @@ test('front-end validates stale attachments and distinguishes gated pages from d
         const files = documentFiles(suffix);
         const uploaded = await upload(actor, actorApi, character.id, files.txt, track);
         expect(uploaded.ok).toBe(true);
+        const pdf = await upload(actor, actorApi, character.id, files.pdf, track);
+        expect(pdf.ok).toBe(true);
         const document = uploaded.body;
-        await wpRequest(actor, actorApi, route(character.id), { method: 'POST', body: { ids: [document.id] } });
+        await wpRequest(actor, actorApi, route(character.id), { method: 'POST', body: { ids: [document.id, pdf.body.id] } });
         const anonymous = await browser.newContext({ baseURL, storageState: { cookies: [], origins: [] } });
         try {
             const visitor = await anonymous.newPage();
@@ -318,9 +361,14 @@ test('front-end validates stale attachments and distinguishes gated pages from d
             await expect(visitor).toHaveURL(/wp-login\.php/);
             await expect(visitor.getByRole('region', { name: 'Documents', exact: true })).toHaveCount(0);
             rejected(await rawJson(visitor, { root: api.root }, route(character.id), { nonce: null }), 'Anonymous document metadata requests must be denied');
-            const direct = await anonymous.request.get(document.url);
-            expect(direct.status(), 'Normal upload URLs are currently public; this test records that limitation explicitly').toBe(200);
-            expect(await direct.body()).toEqual(files.txt.buffer);
+            const responses = [];
+            for (const [extension, item] of [['txt', document], ['pdf', pdf.body]]) {
+                const direct = await anonymous.request.get(item.url);
+                expect(direct.status(), 'Normal upload URLs are currently public; this test records that limitation explicitly').toBe(200);
+                expect(await direct.body()).toEqual(files[extension].buffer);
+                responses.push({ extension, status: direct.status(), contentType: direct.headers()['content-type'] || '' });
+            }
+            await testInfo.attach('anonymous-document-responses', { body: JSON.stringify(responses, null, 2), contentType: 'application/json' });
             testInfo.annotations.push({ type: 'privacy-limitation', description: 'Anonymous direct upload URL returned the original file while the Character page redirected to login.' });
             await wpRequest(page, api, `wp/v2/ligatura_character/${character.id}`, { method: 'POST', body: { password: `fixture-${suffix}` } });
             await actor.goto(character.link);
@@ -328,6 +376,7 @@ test('front-end validates stale attachments and distinguishes gated pages from d
             await expect(actor.getByRole('region', { name: 'Documents', exact: true })).toHaveCount(0);
             await expect(actor.getByRole('region', { name: 'Full Sheet', exact: true })).toHaveCount(0);
             await wpRequest(page, api, `wp/v2/ligatura_character/${character.id}`, { method: 'POST', body: { password: '' } });
+            await wpRequest(actor, actorApi, route(character.id), { method: 'POST', body: { ids: [document.id] } });
             await wpRequest(page, api, `wp/v2/media/${document.id}?force=true`, { method: 'DELETE' });
             await actor.goto(character.link);
             await expect(actor.getByRole('region', { name: 'Documents', exact: true })).toHaveCount(0);

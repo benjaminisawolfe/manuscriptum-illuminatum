@@ -108,14 +108,32 @@
 			if ( button.hasAttribute( 'data-attach-documents' ) ) {
 				if ( ! frame ) {
 					// A selection-only native frame; uploads use the validated endpoint above.
+					const DocumentBrowser = wp.media.view.AttachmentsBrowser.extend( {
+						createUploader: function () {
+							this.uploader = new wp.media.View( { controller: this.controller, tagName: 'p' } );
+							this.uploader.$el.addClass( 'hidden' ).text( __( 'No documents found. Close this dialog and use Upload Document to add a file.', domain ) );
+							this.views.add( this.uploader );
+						},
+					} );
 					const DocumentFrame = wp.media.view.MediaFrame.Select.extend( {
 						browseRouter: router => router.set( { browse: { text: __( 'Media Library', domain ), priority: 40 } } ),
+						browseContent: function ( region ) {
+							const state = this.state();
+							this.$el.removeClass( 'hide-toolbar' );
+							region.view = new DocumentBrowser( {
+								controller: this, collection: state.get( 'library' ), selection: state.get( 'selection' ),
+								model: state, sortable: false, search: true, filters: false, date: false, display: false,
+							} );
+						},
 					} );
 					frame = new DocumentFrame( {
 						title: __( 'Attach Document', domain ), button: { text: __( 'Attach Document', domain ) },
 						multiple: true, uploader: false,
 						library: { type: [ 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.oasis.opendocument.text', 'application/rtf', 'text/rtf', 'text/plain' ] },
 					} );
+					// Library defaults to Upload and can reuse a user's previous tab.
+					// This frame must always browse, without changing core media preferences.
+					frame.state( 'library' ).set( { content: 'browse', contentUserSetting: false } );
 					frame.on( 'select', async () => {
 						setBusy( true );
 						try {

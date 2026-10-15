@@ -139,12 +139,25 @@ test('Wiki generic and Storyguide Visual fields survive editing and a meta-box m
             await page.keyboard.type(text);
         }
         const box = page.locator('#manuscriptum-illuminatum-storyguide-notes');
-        await box.getByRole('button', { name: /Move up/ }).click();
-        const notes = await visual(page, 'ligatura_storyguide_notes');
-        await expect(notes).toContainText('Private fixture notes');
-        await notes.click();
-        await page.keyboard.press('Control+End');
-        await page.keyboard.type(' after moving');
+        // WordPress remembers box order per user. Choose an available direction
+        // and restore that order, even if the moved editor assertion fails.
+        const up = box.getByRole('button', { name: /Move up/ });
+        const down = box.getByRole('button', { name: /Move down/ });
+        const moveUp = await up.getAttribute('aria-disabled') !== 'true';
+        const move = moveUp ? up : down;
+        const restore = moveUp ? down : up;
+        await expect(move).not.toHaveAttribute('aria-disabled', 'true');
+        await move.click();
+        try {
+            const notes = await visual(page, 'ligatura_storyguide_notes');
+            await expect(notes).toContainText('Private fixture notes');
+            await notes.click();
+            await page.keyboard.press('Control+End');
+            await page.keyboard.type(' after moving');
+        } finally {
+            await restore.click();
+        }
+        await expect(await visual(page, 'ligatura_storyguide_notes')).toContainText('Private fixture notes after moving');
         await saveEditor(page, false);
         const stored = await wpRequest(page, api, `ligatura-manuscripti-illuminati/v1/meta-saving/stored?post_id=${post.id}`);
         expect(['<p>Public summary</p>', 'Public summary']).toContain(stored.meta.ligatura_public_summary);
