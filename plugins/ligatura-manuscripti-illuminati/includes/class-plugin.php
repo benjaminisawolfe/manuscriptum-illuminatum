@@ -45,6 +45,7 @@ final class Plugin {
 		add_action( 'init', __NAMESPACE__ . '\\PostTypes\\maybe_flush_rewrite_rules', 20 );
 		add_action( 'init', __NAMESPACE__ . '\\Taxonomies\\register_taxonomies' );
 		add_action( 'init', __NAMESPACE__ . '\\MetaBoxes\\register_meta_fields' );
+		add_action( 'init', __NAMESPACE__ . '\\CharacterDocuments\\register_meta' );
 		add_action( 'init', __NAMESPACE__ . '\\PlayerAccess\\register_assignment_meta' );
 		add_action( 'init', __NAMESPACE__ . '\\DemoContent\\register_demo_meta' );
 		add_action( 'init', __NAMESPACE__ . '\\PlayerAccess\\remove_player_author_support', 30 );
@@ -53,6 +54,7 @@ final class Plugin {
 		add_action( 'add_meta_boxes', __NAMESPACE__ . '\\MetaBoxes\\register_meta_boxes' );
 		add_action( 'add_meta_boxes', __NAMESPACE__ . '\\PlayerAccess\\register_assignment_meta_box' );
 		add_action( 'save_post', __NAMESPACE__ . '\\MetaBoxes\\save_meta_boxes', 10, 2 );
+		add_action( 'save_post_ligatura_character', __NAMESPACE__ . '\\CharacterDocuments\\save_form', 10, 2 );
 		add_action( 'save_post', __NAMESPACE__ . '\\JournalAuthorship\\validate_persisted_author_after_save', 30, 2 );
 		add_action( 'save_post_ligatura_character', __NAMESPACE__ . '\\PlayerAccess\\save_assignment', 20, 2 );
 		add_action( 'wp_after_insert_post', __NAMESPACE__ . '\\PlayerAccess\\ensure_character_assignment', 20, 2 );
@@ -102,6 +104,7 @@ final class Plugin {
 		add_action( 'do_feed_rss2', __NAMESPACE__ . '\\Privacy\\block_guest_feeds', 0 );
 		add_action( 'do_feed_atom', __NAMESPACE__ . '\\Privacy\\block_guest_feeds', 0 );
 		add_action( 'rest_api_init', __NAMESPACE__ . '\\Rest\\register_routes' );
+		add_action( 'rest_api_init', __NAMESPACE__ . '\\CharacterDocuments\\register_rest_routes' );
 		add_action( 'rest_api_init', __NAMESPACE__ . '\\JournalDirectory\\register_rest_route' );
 		add_action( 'rest_api_init', __NAMESPACE__ . '\\CovenantDirectory\\register_rest_route' );
 		add_action( 'rest_api_init', __NAMESPACE__ . '\\SpeculumDirectory\\register_rest_route' );
@@ -148,19 +151,31 @@ final class Plugin {
 			return;
 		}
 
+		wp_enqueue_editor();
 		wp_enqueue_style(
 			'ligatura-manuscripti-illuminati-admin',
 			LIGATURA_MANUSCRIPTI_ILLUMINATI_URL . 'assets/admin.css',
 			array(),
-			LIGATURA_MANUSCRIPTI_ILLUMINATI_VERSION
+			md5_file( LIGATURA_MANUSCRIPTI_ILLUMINATI_DIR . 'assets/admin.css' )
 		);
 
 		wp_enqueue_script(
 			'ligatura-manuscripti-illuminati-admin',
 			LIGATURA_MANUSCRIPTI_ILLUMINATI_URL . 'assets/admin.js',
-			array( 'wp-data', 'wp-dom-ready' ),
-			LIGATURA_MANUSCRIPTI_ILLUMINATI_VERSION,
+			array( 'jquery', 'editor', 'wp-data', 'wp-dom-ready' ),
+			md5_file( LIGATURA_MANUSCRIPTI_ILLUMINATI_DIR . 'assets/admin.js' ),
 			true
 		);
+
+		if ( 'ligatura_character' === $screen->post_type ) {
+			wp_enqueue_media();
+			wp_enqueue_script(
+				'ligatura-character-documents',
+				LIGATURA_MANUSCRIPTI_ILLUMINATI_URL . 'assets/character-documents.js',
+				array( 'media-views', 'wp-data', 'wp-dom-ready', 'wp-i18n' ),
+				md5_file( LIGATURA_MANUSCRIPTI_ILLUMINATI_DIR . 'assets/character-documents.js' ),
+				true
+			);
+		}
 	}
 }

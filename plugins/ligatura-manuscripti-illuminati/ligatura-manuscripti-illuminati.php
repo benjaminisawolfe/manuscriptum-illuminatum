@@ -41,6 +41,7 @@ require_once LIGATURA_MANUSCRIPTI_ILLUMINATI_DIR . 'includes/journal-authorship.
 require_once LIGATURA_MANUSCRIPTI_ILLUMINATI_DIR . 'includes/private-notes.php';
 require_once LIGATURA_MANUSCRIPTI_ILLUMINATI_DIR . 'includes/privacy.php';
 require_once LIGATURA_MANUSCRIPTI_ILLUMINATI_DIR . 'includes/media.php';
+require_once LIGATURA_MANUSCRIPTI_ILLUMINATI_DIR . 'includes/character-documents.php';
 require_once LIGATURA_MANUSCRIPTI_ILLUMINATI_DIR . 'includes/meta-boxes.php';
 require_once LIGATURA_MANUSCRIPTI_ILLUMINATI_DIR . 'includes/shortcodes.php';
 require_once LIGATURA_MANUSCRIPTI_ILLUMINATI_DIR . 'includes/rest.php';

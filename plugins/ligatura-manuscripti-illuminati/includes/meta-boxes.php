@@ -388,15 +388,7 @@ function render_fields( int $post_id, array $fields ): void {
 		} elseif ( str_ends_with( $field['type'], '_multiselect' ) ) {
 			render_relationship_select_field( $post_id, $field, parse_id_list( $value ) );
 		} elseif ( 'rich_text' === $field['type'] ) {
-			wp_editor(
-				(string) $value,
-				$field['key'],
-				array(
-					'textarea_name' => $field['key'],
-					'textarea_rows' => 8,
-					'media_buttons' => false,
-				)
-			);
+			render_meta_editor( (string) $value, $field['key'], 8 );
 		} else {
 			echo '<input type="' . esc_attr( $field['type'] ) . '" id="' . esc_attr( $field['key'] ) . '" name="' . esc_attr( $field['key'] ) . '" value="' . esc_attr( (string) $value ) . '" />';
 		}
@@ -601,13 +593,25 @@ function render_rich_text_field( int $post_id, array $field ): void {
 
 	$value = (string) get_post_meta( $post_id, $field['key'], true );
 
+	render_meta_editor( $value, $field['key'], 12 );
+}
+
+/**
+ * Render a meta-box editor whose Visual instance starts after DOM placement.
+ *
+ * Gutenberg relocates meta boxes after page load. Moving an initialized
+ * TinyMCE iframe destroys its document, so admin.js owns that lifecycle.
+ */
+function render_meta_editor( string $value, string $key, int $rows ): void {
 	wp_editor(
 		$value,
-		$field['key'],
+		$key,
 		array(
-			'textarea_name' => $field['key'],
-			'textarea_rows' => 12,
-			'media_buttons' => true,
+			'textarea_name' => $key,
+			'textarea_rows' => $rows,
+			'editor_class'  => 'manuscriptum-illuminatum-meta-editor',
+			'media_buttons' => false,
+			'tinymce'       => array( 'wp_skip_init' => true ),
 		)
 	);
 }
@@ -656,6 +660,7 @@ function render_character_abilities_box( \WP_Post $post ): void {
 function render_character_full_sheet_box( \WP_Post $post ): void {
 	$field = CharacterFields\get_character_field_groups()['full_sheet'][0];
 	render_rich_text_field( $post->ID, $field );
+	\LigaturaManuscriptiIlluminati\CharacterDocuments\render_control( $post );
 }
 
 /**
@@ -692,14 +697,10 @@ function render_storyguide_notes_box( \WP_Post $post ): void {
 
 	echo '<p class="manuscriptum-illuminatum-admin-private-warning">' . esc_html__( 'Only Storyguides and Administrators can see this.', 'ligatura-manuscripti-illuminati' ) . '</p>';
 
-	wp_editor(
+	render_meta_editor(
 		(string) get_post_meta( $post->ID, PrivateNotes\META_KEY, true ),
 		PrivateNotes\META_KEY,
-		array(
-			'textarea_name' => PrivateNotes\META_KEY,
-			'textarea_rows' => 10,
-			'media_buttons' => false,
-		)
+		10
 	);
 }
 

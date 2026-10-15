@@ -1036,6 +1036,15 @@ textarea:focus-visible {
 	margin-top: 1rem;
 }
 
+.manuscriptum-illuminatum-character-documents li {
+	margin-block: 0.5rem;
+	overflow-wrap: anywhere;
+}
+
+.manuscriptum-illuminatum-document-type {
+	font-size: 0.875em;
+}
+
 .manuscriptum-illuminatum-featured-image {
 	margin: 0 0 clamp(2rem, 5vw, 4rem);
 }
