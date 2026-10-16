@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.0 — 2026-10-15
+
+Minor release prepared for review; publication is pending separate approval.
+
+- Migrates project-owned legacy Player and Storyguide roles to the canonical roles, preserving unrelated role assignments and individual grants.
+- Fixes authorized Character metadata saves for assigned Players and preserves omitted fields during partial saves.
+- Restores Visual editing in campaign meta boxes and removes their generic Add Media buttons.
+- Adds Character document upload, attachment and unlinking for PDF, DOC, DOCX, ODT, RTF and TXT files, plus front-end Full Sheet and Documents sections.
+- Documents the upload privacy boundary: direct document URLs are accessible without authentication, even on a login-only site. Do not upload Storyguide-only or sensitive documents without a separate protected-storage solution.
+- Requires an operator backup of the production database, uploads and existing theme/plugin packages before updating; includes the versioned legacy-role migration from Pass 1.
+
 ## 1.0.2 — 2026-10-15
 
 Maintenance release.
