@@ -40,3 +40,10 @@ define( 'LIGATURA_MANUSCRIPTI_ILLUMINATI_REQUIRE_LOGIN', false );
 Use `true` or omit the constant for a private site. Ask your web host for help editing `wp-config.php` if necessary.
 
 Public mode does not expose Storyguide-only notes or private posts; their capability checks remain active. Direct media URLs under `wp-content/uploads` do not pass through the plugin's PHP login gate. Use host, CDN, or storage-level access control for confidential files.
+
+Character Full Sheets can link validated PDF, Word, OpenDocument, RTF and plain
+text documents. These use ordinary upload storage and must not contain
+Storyguide-only or confidential material. The editor warns about direct-URL
+access; unlinking removes the Character relationship without deleting the file.
+See [Visual editors and Character documents](VISUAL-EDITORS-AND-CHARACTER-DOCUMENTS.md)
+for supported-format checks, authorization, acceptance and rollback details.

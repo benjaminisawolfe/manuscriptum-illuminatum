@@ -1031,9 +1031,19 @@ textarea:focus-visible {
 	padding-top: 0.85rem;
 }
 
-.manuscriptum-illuminatum-character-notes__body {
+.manuscriptum-illuminatum-character-notes__body,
+.manuscriptum-illuminatum-character-full-sheet > .manuscriptum-illuminatum-content {
 	display: flow-root;
 	margin-top: 1rem;
+}
+
+.manuscriptum-illuminatum-character-documents li {
+	margin-block: 0.5rem;
+	overflow-wrap: anywhere;
+}
+
+.manuscriptum-illuminatum-document-type {
+	font-size: 0.875em;
 }
 
 .manuscriptum-illuminatum-featured-image {

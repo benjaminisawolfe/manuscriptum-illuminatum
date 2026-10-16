@@ -264,7 +264,22 @@ test('single Persona uses the compact header, six-field summary, two-column fiel
             expect(size).toBeLessThanOrEqual(14);
         }
 
-        await expect(entry.getByRole('heading', { name: 'Full Sheet', exact: true })).toHaveCount(0);
+        // Pass 2 intentionally displays the saved rich-text sheet separately
+        // from the main body and structured fields, without duplicating it.
+        const savedSheet = fixture.originalState.meta.ligatura_full_sheet;
+        expect(savedSheet.trim()).not.toBe('');
+        const sheet = entry.getByRole('region', { name: 'Full Sheet', exact: true });
+        await expect(sheet).toHaveCount(1);
+        await expect(sheet).toBeVisible();
+        const sheetParagraphs = await page.evaluate(html => Array.from(new DOMParser().parseFromString(html, 'text/html').querySelectorAll('p'), paragraph => paragraph.textContent.trim()), savedSheet);
+        expect(sheetParagraphs.length).toBeGreaterThan(0);
+        await expect(sheet.locator('.manuscriptum-illuminatum-content p')).toHaveText(sheetParagraphs);
+        const sheetSpacing = await sheet.evaluate(element => {
+            const heading = element.querySelector(':scope > h2').getBoundingClientRect();
+            const paragraph = element.querySelector('.manuscriptum-illuminatum-content p').getBoundingClientRect();
+            return paragraph.top - heading.bottom;
+        });
+        expect(sheetSpacing, 'Full Sheet prose must clear its heading and decorative initial').toBeGreaterThanOrEqual(12);
         await expect(entry.getByRole('heading', { name: 'Public Notes', exact: true })).toHaveCount(0);
 
         const notes = entry.locator('.manuscriptum-illuminatum-character-notes');

@@ -397,7 +397,7 @@ function paginae_manuscripti_illuminati_theme_assets(): void {
 		'paginae-manuscripti-illuminati-main',
 		get_template_directory_uri() . '/assets/css/main.css',
 		$fonts_url ? array( 'paginae-manuscripti-illuminati-style', 'manuscriptum-illuminatum-google-fonts' ) : array( 'paginae-manuscripti-illuminati-style' ),
-		wp_get_theme()->get( 'Version' )
+		md5_file( get_template_directory() . '/assets/css/main.css' )
 	);
 
 	wp_enqueue_style(

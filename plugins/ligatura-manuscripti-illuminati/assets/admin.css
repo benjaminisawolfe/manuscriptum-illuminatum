@@ -53,3 +53,23 @@
 	color: #b32d2e;
 	font-weight: 600;
 }
+
+.ligatura-character-documents {
+	border-top: 1px solid #c3c4c7;
+	margin-top: 1.5rem;
+	padding-top: 0.75rem;
+}
+
+.ligatura-character-documents [data-document-list] {
+	list-style: disc;
+	margin-left: 1.5rem;
+}
+
+.ligatura-character-documents [data-document-list] li {
+	margin-bottom: 0.75rem;
+	overflow-wrap: anywhere;
+}
+
+.ligatura-character-documents [data-document-status] {
+	white-space: pre-line;
+}

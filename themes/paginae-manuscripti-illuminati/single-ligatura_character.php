@@ -96,6 +96,35 @@ get_header();
 				<?php endforeach; ?>
 			</section>
 
+			<?php
+			$full_sheet = paginae_manuscripti_illuminati_meta( $post_id, 'ligatura_full_sheet' );
+			$can_read_sheet = function_exists( '\\LigaturaManuscriptiIlluminati\\Privacy\\can_read_post' )
+				? \LigaturaManuscriptiIlluminati\Privacy\can_read_post( $post_id ) : current_user_can( 'read_post', $post_id );
+			?>
+			<?php if ( $full_sheet && $can_read_sheet && ! post_password_required() ) : ?>
+				<section class="manuscriptum-illuminatum-section manuscriptum-illuminatum-character-full-sheet" aria-labelledby="character-full-sheet-heading">
+					<h2 id="character-full-sheet-heading"><?php esc_html_e( 'Full Sheet', 'paginae-manuscripti-illuminati' ); ?></h2>
+					<div class="manuscriptum-illuminatum-content">
+						<?php echo wp_kses_post( wpautop( $full_sheet ) ); ?>
+					</div>
+				</section>
+			<?php endif; ?>
+
+			<?php
+			$documents = function_exists( '\\LigaturaManuscriptiIlluminati\\CharacterDocuments\\get_documents' )
+				? \LigaturaManuscriptiIlluminati\CharacterDocuments\get_documents( $post_id ) : array();
+			?>
+			<?php if ( $documents ) : ?>
+				<section class="manuscriptum-illuminatum-section manuscriptum-illuminatum-character-documents" aria-labelledby="character-documents-heading">
+					<h2 id="character-documents-heading"><?php esc_html_e( 'Documents', 'paginae-manuscripti-illuminati' ); ?></h2>
+					<ul>
+						<?php foreach ( $documents as $document ) : ?>
+							<li><a href="<?php echo esc_url( $document['url'] ); ?>"><?php echo esc_html( $document['title'] ); ?></a> <span class="manuscriptum-illuminatum-document-type">(<?php echo esc_html( $document['type'] ); ?>)</span></li>
+						<?php endforeach; ?>
+					</ul>
+				</section>
+			<?php endif; ?>
+
 			<?php if ( paginae_manuscripti_illuminati_meta( $post_id, 'ligatura_notes_public' ) ) : ?>
 				<section class="manuscriptum-illuminatum-section manuscriptum-illuminatum-character-notes">
 					<h2><?php esc_html_e( 'Notes', 'paginae-manuscripti-illuminati' ); ?></h2>
